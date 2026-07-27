@@ -53,18 +53,8 @@ window.addEventListener('DOMContentLoaded', () => {
   showSlide(1);
 });
 
-// Inject Google Drive photos into gallery img tags
-function loadPhotos() {
-  const imgs = document.querySelectorAll('#photo-gallery img');
-  imgs.forEach((img, i) => {
-    const cfg = PHOTO_CONFIG[i];
-    if (cfg && cfg.url) {
-      img.src = getDriveUrl(cfg.url);
-      img.alt = cfg.caption;
-    }
-    // If no url, keep local path (placeholder gradient will show on error)
-  });
-}
+// Inject Google Drive photos — book gallery handles its own loading
+function loadPhotos() { /* handled by initBookGallery */ }
 
 // ===== SLIDE NAVIGATION =====
 function showSlide(n) {
@@ -134,6 +124,7 @@ function onSlideEnter(n) {
   if (n === 2 && !ageAnimDone) startAgeCounter();
   if (n === 3) resetCakeSlide();
   if (n === 4) resetBalloonGame();
+  if (n === 6) initBookGallery();
   if (n === 7) startLetter();
   if (n === 8) launchFireworks();
   if (n === 9) launchHeartBurst();
@@ -320,31 +311,139 @@ function flipCard(card) {
   }
 }
 
-// ===== SLIDE 6: GALLERY / LIGHTBOX =====
-function getPhotoUrls() {
-  return PHOTO_CONFIG.map((cfg, i) =>
-    cfg.url ? getDriveUrl(cfg.url) : `photos/photo${i + 1}.jpg`
-  );
+// ===== SLIDE 6: BOOK-FLIP PHOTO GALLERY =====
+let bookIndex = 0;
+let bookFlipping = false;
+const TOTAL_PHOTOS = 6;
+
+const placeholderEmojis = ['🌸','💫','🌺','🌟','🦋','👑'];
+const placeholderGrads = [
+  'linear-gradient(135deg,#ff9a9e,#fecfef)',
+  'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+  'linear-gradient(135deg,#f093fb,#f5576c)',
+  'linear-gradient(135deg,#4facfe,#00f2fe)',
+  'linear-gradient(135deg,#43e97b,#38f9d7)',
+  'linear-gradient(135deg,#fa709a,#fee140)'
+];
+
+function getPhotoUrl(i) {
+  const cfg = PHOTO_CONFIG[i];
+  return cfg && cfg.url ? getDriveUrl(cfg.url) : `photos/photo${i + 1}.jpg`;
 }
 
-function openLightbox(idx) {
-  lightboxIndex = idx;
-  const photos = getPhotoUrls();
-  document.getElementById('lightbox-img').src = photos[idx];
-  document.getElementById('lb-caption').textContent = PHOTO_CONFIG[idx].caption;
-  document.getElementById('lightbox').classList.remove('hidden');
+function getCaption(i) {
+  return PHOTO_CONFIG[i] ? PHOTO_CONFIG[i].caption : '';
 }
 
-function closeLightbox() {
-  document.getElementById('lightbox').classList.add('hidden');
+function initBookGallery() {
+  bookIndex = 0;
+  bookFlipping = false;
+  // Reset card
+  const card = document.getElementById('book-card');
+  card.style.transition = 'none';
+  card.style.transform = 'rotateY(0deg)';
+
+  // Load front face (photo 0)
+  setBookFace('front', 0);
+  // Pre-load back face (photo 1)
+  setBookFace('back', 1);
+
+  // Update dots
+  updateBookDots(0);
+
+  // Hint
+  document.getElementById('book-hint-text').textContent = 'Tap the photo to flip ➜';
+  document.getElementById('gallery-continue').classList.add('hidden');
+
+  // Reset placeholder visibility
+  ['front','back'].forEach(side => {
+    const ph = document.getElementById(`book-ph-${side}`);
+    const img = document.getElementById(`book-img-${side}`);
+    if (ph) ph.style.display = 'none';
+    if (img) img.style.display = '';
+  });
 }
 
-function changeLightboxPhoto(dir) {
-  const photos = getPhotoUrls();
-  lightboxIndex = (lightboxIndex + dir + photos.length) % photos.length;
-  document.getElementById('lightbox-img').src = photos[lightboxIndex];
-  document.getElementById('lb-caption').textContent = PHOTO_CONFIG[lightboxIndex].caption;
+function setBookFace(side, idx) {
+  const img = document.getElementById(`book-img-${side}`);
+  const ph  = document.getElementById(`book-ph-${side}`);
+  const cap = document.getElementById(`book-cap-${side}`);
+  const num = document.getElementById(`book-num-${side}`);
+
+  if (idx >= TOTAL_PHOTOS) return;
+
+  const url = getPhotoUrl(idx);
+  ph.style.display = 'none';
+  img.style.display = '';
+  img.src = url;
+  ph.textContent = placeholderEmojis[idx];
+
+  // If image fails, show placeholder gradient
+  img.onerror = function() {
+    this.style.display = 'none';
+    ph.style.display = 'flex';
+    ph.parentElement.style.background = placeholderGrads[idx];
+  };
+
+  cap.textContent = getCaption(idx);
+  num.textContent = `${idx + 1} / ${TOTAL_PHOTOS}`;
 }
+
+function updateBookDots(idx) {
+  document.querySelectorAll('.bdot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+}
+
+function flipBookPage() {
+  if (bookFlipping) return;
+  if (bookIndex >= TOTAL_PHOTOS - 1) return; // all viewed
+
+  bookFlipping = true;
+  const card = document.getElementById('book-card');
+
+  // Animate: flip card 180deg
+  card.style.transition = 'transform 0.55s cubic-bezier(0.4,0,0.2,1)';
+  card.style.transform = 'rotateY(-180deg)';
+
+  setTimeout(() => {
+    // After flip: swap faces, reset card instantly
+    bookIndex++;
+    card.style.transition = 'none';
+    card.style.transform = 'rotateY(0deg)';
+
+    // Front now shows current photo
+    setBookFace('front', bookIndex);
+    // Back pre-loads next
+    if (bookIndex + 1 < TOTAL_PHOTOS) {
+      setBookFace('back', bookIndex + 1);
+    }
+
+    updateBookDots(bookIndex);
+
+    // Spark effect
+    const scene = document.getElementById('book-scene');
+    createParticleBurst(scene, '#ffd700');
+
+    // Last photo reached
+    if (bookIndex === TOTAL_PHOTOS - 1) {
+      document.getElementById('book-hint-text').textContent = '✨ You\'ve seen them all!';
+      document.getElementById('book-corner') && (document.getElementById('book-corner').style.display = 'none');
+      setTimeout(() => {
+        document.getElementById('gallery-continue').classList.remove('hidden');
+        spawnConfettiBurst();
+      }, 400);
+    }
+
+    bookFlipping = false;
+  }, 560);
+}
+
+// Keep these as no-ops in case any old reference exists
+function openLightbox() {}
+function closeLightbox() {}
+function changeLightboxPhoto() {}
+
 
 // ===== SLIDE 7: LETTER — instant paragraph reveal =====
 const letterParagraphs = [

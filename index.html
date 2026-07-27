@@ -196,77 +196,65 @@
     </div>
   </div>
 
-  <!-- ===== SLIDE 6: PHOTO GALLERY ===== -->
+  <!-- ===== SLIDE 6: PHOTO BOOK ===== -->
   <div class="slide" id="slide-6">
     <div class="slide-content gallery-slide">
       <h2 class="slide-title">Beautiful Moments 📸</h2>
-      <p class="slide-sub">Every picture of yours is pure magic ✨</p>
-      <div class="photo-gallery" id="photo-gallery">
-        <div class="photo-item" onclick="openLightbox(0)">
-          <div class="photo-frame">
-            <img src="photos/photo1.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#ff9a9e,#fecfef)';this.style.display='none'" />
-            <div class="photo-placeholder" style="display:none">🌸</div>
-            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
+      <p class="slide-sub" id="book-hint-text">Tap the photo to flip ➜</p>
+
+      <!-- Book Scene -->
+      <div class="book-scene" id="book-scene" onclick="flipBookPage()">
+        <!-- Stack shadow cards (visual depth) -->
+        <div class="book-shadow s3"></div>
+        <div class="book-shadow s2"></div>
+        <div class="book-shadow s1"></div>
+
+        <!-- Main flipping card -->
+        <div class="book-card" id="book-card">
+          <!-- FRONT face -->
+          <div class="book-face book-front" id="book-front">
+            <div class="book-photo-wrap">
+              <img id="book-img-front" src="" alt="Photo"
+                onerror="this.style.display='none';document.getElementById('book-ph-front').style.display='flex'" />
+              <div class="book-ph" id="book-ph-front">🌸</div>
+            </div>
+            <div class="book-meta">
+              <span class="book-caption" id="book-cap-front"></span>
+              <span class="book-num" id="book-num-front"></span>
+            </div>
+            <div class="book-corner">➜</div>
           </div>
-          <div class="photo-caption">Sunshine Girl ☀️</div>
-        </div>
-        <div class="photo-item" onclick="openLightbox(1)">
-          <div class="photo-frame">
-            <img src="photos/photo2.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#a18cd1,#fbc2eb)';this.style.display='none'" />
-            <div class="photo-placeholder" style="display:none">💫</div>
-            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
+          <!-- BACK face (next photo pre-loaded) -->
+          <div class="book-face book-back" id="book-back">
+            <div class="book-photo-wrap">
+              <img id="book-img-back" src="" alt="Photo"
+                onerror="this.style.display='none';document.getElementById('book-ph-back').style.display='flex'" />
+              <div class="book-ph" id="book-ph-back">💫</div>
+            </div>
+            <div class="book-meta">
+              <span class="book-caption" id="book-cap-back"></span>
+              <span class="book-num" id="book-num-back"></span>
+            </div>
           </div>
-          <div class="photo-caption">Simply Stunning ✨</div>
-        </div>
-        <div class="photo-item" onclick="openLightbox(2)">
-          <div class="photo-frame">
-            <img src="photos/photo3.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#f093fb,#f5576c)';this.style.display='none'" />
-            <div class="photo-placeholder" style="display:none">🌺</div>
-            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
-          </div>
-          <div class="photo-caption">Forever Glowing 🌸</div>
-        </div>
-        <div class="photo-item" onclick="openLightbox(3)">
-          <div class="photo-frame">
-            <img src="photos/photo4.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#4facfe,#00f2fe)';this.style.display='none'" />
-            <div class="photo-placeholder" style="display:none">🌟</div>
-            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
-          </div>
-          <div class="photo-caption">Pure Joy 🌟</div>
-        </div>
-        <div class="photo-item" onclick="openLightbox(4)">
-          <div class="photo-frame">
-            <img src="photos/photo5.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#43e97b,#38f9d7)';this.style.display='none'" />
-            <div class="photo-placeholder" style="display:none">🦋</div>
-            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
-          </div>
-          <div class="photo-caption">Radiant Soul 💫</div>
-        </div>
-        <div class="photo-item" onclick="openLightbox(5)">
-          <div class="photo-frame">
-            <img src="photos/photo6.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#fa709a,#fee140)';this.style.display='none'" />
-            <div class="photo-placeholder" style="display:none">👑</div>
-            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
-          </div>
-          <div class="photo-caption">Birthday Queen 👑</div>
         </div>
       </div>
-      <button class="btn-magic gallery-btn" onclick="nextSlide()">
+
+      <!-- Progress dots -->
+      <div class="book-dots" id="book-dots">
+        <span class="bdot active"></span>
+        <span class="bdot"></span>
+        <span class="bdot"></span>
+        <span class="bdot"></span>
+        <span class="bdot"></span>
+        <span class="bdot"></span>
+      </div>
+
+      <button class="btn-magic hidden" id="gallery-continue" onclick="nextSlide()">
         <span>Read the Letter 💌</span>
       </button>
     </div>
   </div>
 
-  <!-- LIGHTBOX -->
-  <div id="lightbox" class="lightbox hidden" onclick="closeLightbox()">
-    <div class="lightbox-content" onclick="event.stopPropagation()">
-      <button class="lb-close" onclick="closeLightbox()">✕</button>
-      <button class="lb-prev" onclick="changeLightboxPhoto(-1)">❮</button>
-      <img id="lightbox-img" src="" alt="Sravani" />
-      <button class="lb-next" onclick="changeLightboxPhoto(1)">❯</button>
-      <div class="lb-caption" id="lb-caption"></div>
-    </div>
-  </div>
 
   <!-- ===== SLIDE 7: LETTER ===== -->
   <div class="slide" id="slide-7">
