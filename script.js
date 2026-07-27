@@ -55,18 +55,19 @@ window.addEventListener('DOMContentLoaded', () => {
   setupAutoMusic();
 });
 
-// Auto-start music on the very first interaction (browser requires this)
+// Auto-start music on the very first interaction
+// Uses touchend (more reliable on iOS/Android for audio gestures than touchstart)
 function setupAutoMusic() {
-  const startOnFirstTouch = () => {
-    if (!musicPlaying) {
-      startMusic();
-      showMusicToast();
-    }
-    document.removeEventListener('click', startOnFirstTouch);
-    document.removeEventListener('touchstart', startOnFirstTouch);
+  let started = false;
+  const tryStart = () => {
+    if (started || musicPlaying) return;
+    started = true;
+    startMusic();
+    showMusicToast();
   };
-  document.addEventListener('click', startOnFirstTouch, { once: true });
-  document.addEventListener('touchstart', startOnFirstTouch, { once: true });
+  // touchend is the correct gesture trigger for audio on mobile browsers
+  document.addEventListener('touchend', tryStart, { once: true, passive: true });
+  document.addEventListener('click', tryStart, { once: true });
 }
 
 function showMusicToast() {

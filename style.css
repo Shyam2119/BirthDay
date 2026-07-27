@@ -118,6 +118,7 @@ body::before {
 #slide-wrapper {
   position: fixed; inset: 0;
   z-index: 10;
+  display: flex; align-items: center; justify-content: center;
 }
 .slide {
   position: absolute; inset: 0;
@@ -1016,12 +1017,15 @@ body::before {
 
 /* Mobile */
 @media (max-width: 480px) {
-  /* Slide system */
-  .slide { align-items: flex-start; padding-top: 10px; }
+  /* Slide system — keep centered, add safe padding for music btn + dots */
+  .slide {
+    align-items: center;
+    padding: 55px 0 55px;
+  }
   .slide-content {
     width: 100vw;
-    max-height: calc(100dvh - 60px);
-    padding: 14px 14px 60px;
+    max-height: calc(100dvh - 110px);
+    padding: 10px 14px;
     overflow-y: auto;
     scrollbar-width: none;
   }
