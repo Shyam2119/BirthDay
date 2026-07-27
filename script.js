@@ -44,6 +44,7 @@ let bgBalloonInterval = null;
 let confettiInterval = null;
 let ageAnimDone = false;
 
+
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
   loadPhotos();
@@ -51,10 +52,43 @@ window.addEventListener('DOMContentLoaded', () => {
   createBgBalloons();
   startConfetti();
   showSlide(1);
+  setupAutoMusic();
 });
+
+// Auto-start music on the very first interaction (browser requires this)
+function setupAutoMusic() {
+  const startOnFirstTouch = () => {
+    if (!musicPlaying) {
+      startMusic();
+      showMusicToast();
+    }
+    document.removeEventListener('click', startOnFirstTouch);
+    document.removeEventListener('touchstart', startOnFirstTouch);
+  };
+  document.addEventListener('click', startOnFirstTouch, { once: true });
+  document.addEventListener('touchstart', startOnFirstTouch, { once: true });
+}
+
+function showMusicToast() {
+  const t = document.createElement('div');
+  t.textContent = '🎵 Playing music for you...';
+  t.style.cssText = `
+    position:fixed; top:70px; right:16px;
+    background:rgba(255,107,157,0.9);
+    color:white; padding:8px 16px; border-radius:30px;
+    font-family:'Poppins',sans-serif; font-size:0.78rem; font-weight:600;
+    z-index:99999; backdrop-filter:blur(10px);
+    animation: fadeIn 0.3s ease;
+    box-shadow: 0 4px 20px rgba(255,107,157,0.4);
+  `;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.5s'; }, 2000);
+  setTimeout(() => t.remove(), 2600);
+}
 
 // Inject Google Drive photos — book gallery handles its own loading
 function loadPhotos() { /* handled by initBookGallery */ }
+
 
 // ===== SLIDE NAVIGATION =====
 function showSlide(n) {
