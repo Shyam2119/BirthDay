@@ -261,10 +261,18 @@ function resetBalloonGame() {
   document.getElementById('reveal-words').textContent = '';
   const revSub = document.getElementById('reveal-sub');
   if (revSub) revSub.classList.add('hidden');
+
   document.querySelectorAll('.game-balloon').forEach(b => {
+    // Cancel pop animation by removing class + forcing reflow
     b.classList.remove('popped');
+    b.style.animation = 'none';
+    b.style.opacity = '1';
+    b.style.transform = '';
     b.style.visibility = 'visible';
     b.style.pointerEvents = 'auto';
+    // Re-trigger the float animation after reflow
+    void b.offsetHeight;
+    b.style.animation = '';
   });
 }
 
