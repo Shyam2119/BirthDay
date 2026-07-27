@@ -130,8 +130,13 @@ function replay() {
   // Reset balloons
   document.querySelectorAll('.game-balloon').forEach(b => {
     b.classList.remove('popped');
+    b.style.animation = 'none';
+    b.style.opacity = '1';
+    b.style.transform = '';
     b.style.visibility = 'visible';
     b.style.pointerEvents = 'auto';
+    void b.offsetHeight;
+    b.style.animation = '';
   });
   document.getElementById('popped-count').textContent = '0';
   document.getElementById('reveal-message').classList.add('hidden');
@@ -143,15 +148,20 @@ function replay() {
   document.getElementById('letter-body').innerHTML = '';
   document.getElementById('letter-footer').classList.add('hidden');
   document.getElementById('letter-continue').classList.add('hidden');
-  // Reset envelope
-  document.getElementById('envelope').classList.remove('opened');
-  document.getElementById('envelope').style.display = 'flex';
+  // Reset envelope — clear ALL inline styles set during open animation
+  const env = document.getElementById('envelope');
+  env.classList.remove('opened');
+  env.style.display = '';
+  env.style.opacity = '';
+  env.style.transform = '';
+  env.style.visibility = '';
   document.getElementById('welcome-reveal').classList.add('hidden');
   document.getElementById('candle-counter').textContent = 'Tap the cake to blow all candles! 🌬️';
   document.getElementById('wish-bubble').classList.add('hidden');
   document.getElementById('cake-continue').classList.add('hidden');
   showSlide(1);
 }
+
 
 // ===== SLIDE ENTER EVENTS =====
 function onSlideEnter(n) {
@@ -652,7 +662,18 @@ function createStars() {
   }
 }
 
-// ===== MUSIC (Web Audio API) =====
+// ===== MUSIC (Audio element — best cross-browser support) =====
+let _audio = null;
+
+function getAudio() {
+  if (!_audio) {
+    _audio = new Audio('music/setlove.mp3');
+    _audio.loop = true;
+    _audio.volume = 0.5;
+  }
+  return _audio;
+}
+
 function toggleMusic() {
   if (musicPlaying) {
     stopMusic();
@@ -663,69 +684,35 @@ function toggleMusic() {
 
 function startMusic() {
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.15;
-    gainNode.connect(audioCtx.destination);
-    musicPlaying = true;
-    document.getElementById('music-btn').classList.add('playing');
-    document.getElementById('music-icon').textContent = '🎶';
-    playMelody();
+    const audio = getAudio();
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.then(() => {
+        musicPlaying = true;
+        document.getElementById('music-btn').classList.add('playing');
+        document.getElementById('music-icon').textContent = '🎶';
+      }).catch(e => console.log('Audio blocked:', e));
+    } else {
+      musicPlaying = true;
+      document.getElementById('music-btn').classList.add('playing');
+      document.getElementById('music-icon').textContent = '🎶';
+    }
   } catch(e) {
-    console.log('Audio not supported:', e);
+    console.log('Audio error:', e);
   }
 }
 
 function stopMusic() {
-  if (audioCtx) {
-    gainNode.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
-    setTimeout(() => {
-      try { audioCtx.close(); } catch(e) {}
-      audioCtx = null;
-    }, 200);
-  }
-  if (musicInterval) clearInterval(musicInterval);
+  try {
+    const audio = getAudio();
+    audio.pause();
+    audio.currentTime = 0;
+  } catch(e) {}
   musicPlaying = false;
   document.getElementById('music-btn').classList.remove('playing');
   document.getElementById('music-icon').textContent = '🎵';
 }
 
-function playNote(freq, start, duration, type = 'sine') {
-  if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const env = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
-  env.gain.setValueAtTime(0, audioCtx.currentTime + start);
-  env.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + start + 0.02);
-  env.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + start + duration);
-  osc.connect(env);
-  env.connect(gainNode);
-  osc.start(audioCtx.currentTime + start);
-  osc.stop(audioCtx.currentTime + start + duration + 0.05);
-}
-
-function playMelody() {
-  // Happy Birthday melody - C D C F E / C D C G F / C c A F E D / Bb A F G F
-  const melody = [
-    {f:264,t:0.0,d:0.4},{f:264,t:0.5,d:0.2},{f:297,t:0.7,d:0.5},
-    {f:264,t:1.3,d:0.5},{f:352,t:1.9,d:0.5},{f:330,t:2.5,d:0.9},
-    {f:264,t:3.6,d:0.4},{f:264,t:4.0,d:0.2},{f:297,t:4.3,d:0.5},
-    {f:264,t:4.9,d:0.5},{f:396,t:5.5,d:0.5},{f:352,t:6.1,d:0.9},
-    {f:264,t:7.1,d:0.4},{f:264,t:7.5,d:0.2},{f:528,t:7.8,d:0.5},
-    {f:440,t:8.4,d:0.5},{f:352,t:9.0,d:0.4},{f:330,t:9.5,d:0.4},{f:297,t:10.0,d:0.8},
-    {f:470,t:11.0,d:0.4},{f:470,t:11.4,d:0.2},{f:440,t:11.7,d:0.5},
-    {f:352,t:12.3,d:0.5},{f:396,t:12.9,d:0.5},{f:352,t:13.5,d:1.2}
-  ];
-
-  const playLoop = () => {
-    if (!musicPlaying) return;
-    melody.forEach(n => playNote(n.f, n.t, n.d, 'triangle'));
-    const duration = 15000;
-    setTimeout(() => { if (musicPlaying) playLoop(); }, duration);
-  };
-  playLoop();
-}
 
 // ===== SHARE =====
 function sharePage() {
