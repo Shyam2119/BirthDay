@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Happy Birthday Sravanii! 🎂✨</title>
+  <meta name="description" content="A special birthday celebration for Sravanii - turning 22 on July 29, 2026!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Poppins:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== FLOATING ELEMENTS ===== -->
+<div id="balloons-container"></div>
+<div id="confetti-container"></div>
+<div id="stars-container"></div>
+
+<!-- ===== MUSIC PLAYER ===== -->
+<div id="music-player">
+  <button id="music-btn" onclick="toggleMusic()" title="Toggle Music">
+    <span id="music-icon">🎵</span>
+  </button>
+</div>
+
+<!-- ===== SLIDE WRAPPER ===== -->
+<div id="slide-wrapper">
+
+  <!-- ===== SLIDE 1: WELCOME ===== -->
+  <div class="slide active" id="slide-1">
+    <div class="slide-content entrance-slide">
+      <div class="envelope" id="envelope" onclick="openEnvelope()">
+        <div class="envelope-flap"></div>
+        <div class="envelope-body">
+          <div class="envelope-letter">
+            <span class="envelope-sparkle">✨</span>
+            <p>A Special<br/>Surprise Awaits</p>
+            <span class="envelope-sparkle">✨</span>
+          </div>
+        </div>
+        <div class="envelope-label">TAP TO OPEN 💌</div>
+      </div>
+      <div class="welcome-text hidden" id="welcome-reveal">
+        <div class="greeting-badge">🎉 BIRTHDAY SPECIAL 🎉</div>
+        <h1 class="glow-text">Hey Sravanii!</h1>
+        <p class="subtitle">I made this just for you 💌</p>
+        <button class="btn-magic" onclick="nextSlide()">
+          <span>Let's Begin ✨</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 2: AGE COUNTER ===== -->
+  <div class="slide" id="slide-2">
+    <div class="slide-content age-slide">
+      <div class="age-label">Today you are turning</div>
+      <div class="age-slot" id="age-slot">
+        <div class="slot-machine" id="slot-machine">
+          <div class="slot-digit" id="digit-tens">2</div>
+          <div class="slot-digit" id="digit-ones">2</div>
+        </div>
+      </div>
+      <div class="age-desc" id="age-desc"></div>
+      <button class="btn-magic hidden" id="age-continue" onclick="nextSlide()">
+        <span>Count me in! 🥳</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 3: BIRTHDAY CAKE ===== -->
+  <div class="slide" id="slide-3">
+    <div class="slide-content cake-slide">
+      <h2 class="slide-title">Make a Wish! 🎂</h2>
+      <p class="slide-sub">Tap the cake to blow out all the candles at once! 🌬️</p>
+      <div class="cake-wrapper">
+        <div class="cake" id="cake" onclick="blowAllCandles()" style="cursor:pointer">
+          <div class="candles-row" id="candles-row">
+            <div class="candle"><div class="flame"></div><div class="wax"></div></div>
+            <div class="candle"><div class="flame"></div><div class="wax"></div></div>
+            <div class="candle"><div class="flame"></div><div class="wax"></div></div>
+            <div class="candle"><div class="flame"></div><div class="wax"></div></div>
+            <div class="candle"><div class="flame"></div><div class="wax"></div></div>
+          </div>
+          <div class="cake-tier top-tier">
+            <div class="frosting-drops"></div>
+            <span class="cake-deco">22</span>
+          </div>
+          <div class="cake-tier mid-tier">
+            <div class="frosting-drops"></div>
+            <div class="cake-flowers">🌸 🌸 🌸</div>
+          </div>
+          <div class="cake-tier bot-tier">
+            <div class="frosting-drops"></div>
+            <div class="cake-flowers">💖 ✨ 💖 ✨ 💖</div>
+          </div>
+          <div class="cake-plate"></div>
+        </div>
+        <div class="wish-bubble hidden" id="wish-bubble">
+          <p class="wish-text">Your wish has been sent to the stars! ⭐</p>
+        </div>
+      </div>
+      <div class="candle-counter" id="candle-counter">Tap the cake to blow all candles! 🌬️</div>
+      <button class="btn-magic hidden" id="cake-continue" onclick="nextSlide()">
+        <span>Continue 💫</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 4: BALLOON POP ===== -->
+  <div class="slide" id="slide-4">
+    <div class="slide-content balloon-slide">
+      <h2 class="slide-title">Pop the Balloons! 🎈</h2>
+      <p class="slide-sub" id="pop-sub">Pop a balloon to reveal the message! 💌</p>
+      <div class="balloon-game" id="balloon-game">
+        <div class="balloon-wrapper">
+          <div class="game-balloon" data-word="You" onclick="popBalloon(this)" style="--clr:#ff6b9d;--delay:0s;--x:10%">
+            <div class="b-body">🎈</div>
+            <div class="b-string"></div>
+          </div>
+          <div class="game-balloon" data-word="Are" onclick="popBalloon(this)" style="--clr:#ffd93d;--delay:0.3s;--x:28%">
+            <div class="b-body">🎈</div>
+            <div class="b-string"></div>
+          </div>
+          <div class="game-balloon" data-word="So" onclick="popBalloon(this)" style="--clr:#6bcb77;--delay:0.6s;--x:55%">
+            <div class="b-body">🎈</div>
+            <div class="b-string"></div>
+          </div>
+          <div class="game-balloon" data-word="Special!" onclick="popBalloon(this)" style="--clr:#4d96ff;--delay:0.9s;--x:75%">
+            <div class="b-body">🎈</div>
+            <div class="b-string"></div>
+          </div>
+        </div>
+        <div class="pop-counter" id="pop-counter-row">
+          <span id="popped-count">0</span>/4 POPPED
+        </div>
+      </div>
+      <div class="reveal-message hidden" id="reveal-message">
+        <div class="reveal-words" id="reveal-words"></div>
+        <p class="reveal-sub hidden" id="reveal-sub">You truly are, Sravanii 💖<br/>Keep shining like the stars 🌟</p>
+        <p class="reveal-heart">💖</p>
+      </div>
+      <button class="btn-magic hidden" id="balloon-continue" onclick="nextSlide()">
+        <span>Next ✨</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 5: FLIP CARDS ===== -->
+  <div class="slide" id="slide-5">
+    <div class="slide-content cards-slide">
+      <h2 class="slide-title">Things That Make You Special ✨</h2>
+      <p class="slide-sub">Tap each card to reveal...</p>
+      <div class="flip-cards-grid" id="flip-cards-grid">
+        <div class="flip-card" onclick="flipCard(this)">
+          <div class="flip-card-inner">
+            <div class="flip-card-front"><span class="card-num">1</span><span class="card-icon">🌸</span></div>
+            <div class="flip-card-back"><p>Your smile lights up every room ☀️</p></div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="flipCard(this)">
+          <div class="flip-card-inner">
+            <div class="flip-card-front"><span class="card-num">2</span><span class="card-icon">💫</span></div>
+            <div class="flip-card-back"><p>Your laugh is the most beautiful sound 🎵</p></div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="flipCard(this)">
+          <div class="flip-card-inner">
+            <div class="flip-card-front"><span class="card-num">3</span><span class="card-icon">💖</span></div>
+            <div class="flip-card-back"><p>Your kindness touches every heart 🌺</p></div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="flipCard(this)">
+          <div class="flip-card-inner">
+            <div class="flip-card-front"><span class="card-num">4</span><span class="card-icon">🌟</span></div>
+            <div class="flip-card-back"><p>You make every moment magical ✨</p></div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="flipCard(this)">
+          <div class="flip-card-inner">
+            <div class="flip-card-front"><span class="card-num">5</span><span class="card-icon">🦋</span></div>
+            <div class="flip-card-back"><p>You are fearless, bold & beautiful 🔥</p></div>
+          </div>
+        </div>
+        <div class="flip-card" onclick="flipCard(this)">
+          <div class="flip-card-inner">
+            <div class="flip-card-front"><span class="card-num">6</span><span class="card-icon">🌙</span></div>
+            <div class="flip-card-back"><p>You make the world a better place 🌍</p></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-magic hidden" id="cards-continue" onclick="nextSlide()">
+        <span>See the Moments 📸</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 6: PHOTO GALLERY ===== -->
+  <div class="slide" id="slide-6">
+    <div class="slide-content gallery-slide">
+      <h2 class="slide-title">Beautiful Moments 📸</h2>
+      <p class="slide-sub">Every picture of yours is pure magic ✨</p>
+      <div class="photo-gallery" id="photo-gallery">
+        <div class="photo-item" onclick="openLightbox(0)">
+          <div class="photo-frame">
+            <img src="photos/photo1.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#ff9a9e,#fecfef)';this.style.display='none'" />
+            <div class="photo-placeholder" style="display:none">🌸</div>
+            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
+          </div>
+          <div class="photo-caption">Sunshine Girl ☀️</div>
+        </div>
+        <div class="photo-item" onclick="openLightbox(1)">
+          <div class="photo-frame">
+            <img src="photos/photo2.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#a18cd1,#fbc2eb)';this.style.display='none'" />
+            <div class="photo-placeholder" style="display:none">💫</div>
+            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
+          </div>
+          <div class="photo-caption">Simply Stunning ✨</div>
+        </div>
+        <div class="photo-item" onclick="openLightbox(2)">
+          <div class="photo-frame">
+            <img src="photos/photo3.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#f093fb,#f5576c)';this.style.display='none'" />
+            <div class="photo-placeholder" style="display:none">🌺</div>
+            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
+          </div>
+          <div class="photo-caption">Forever Glowing 🌸</div>
+        </div>
+        <div class="photo-item" onclick="openLightbox(3)">
+          <div class="photo-frame">
+            <img src="photos/photo4.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#4facfe,#00f2fe)';this.style.display='none'" />
+            <div class="photo-placeholder" style="display:none">🌟</div>
+            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
+          </div>
+          <div class="photo-caption">Pure Joy 🌟</div>
+        </div>
+        <div class="photo-item" onclick="openLightbox(4)">
+          <div class="photo-frame">
+            <img src="photos/photo5.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#43e97b,#38f9d7)';this.style.display='none'" />
+            <div class="photo-placeholder" style="display:none">🦋</div>
+            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
+          </div>
+          <div class="photo-caption">Radiant Soul 💫</div>
+        </div>
+        <div class="photo-item" onclick="openLightbox(5)">
+          <div class="photo-frame">
+            <img src="photos/photo6.jpg" alt="Sravani" onerror="this.onerror=null;this.parentElement.style.background='linear-gradient(135deg,#fa709a,#fee140)';this.style.display='none'" />
+            <div class="photo-placeholder" style="display:none">👑</div>
+            <div class="photo-overlay"><span class="photo-heart">💖</span></div>
+          </div>
+          <div class="photo-caption">Birthday Queen 👑</div>
+        </div>
+      </div>
+      <button class="btn-magic gallery-btn" onclick="nextSlide()">
+        <span>Read the Letter 💌</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div id="lightbox" class="lightbox hidden" onclick="closeLightbox()">
+    <div class="lightbox-content" onclick="event.stopPropagation()">
+      <button class="lb-close" onclick="closeLightbox()">✕</button>
+      <button class="lb-prev" onclick="changeLightboxPhoto(-1)">❮</button>
+      <img id="lightbox-img" src="" alt="Sravani" />
+      <button class="lb-next" onclick="changeLightboxPhoto(1)">❯</button>
+      <div class="lb-caption" id="lb-caption"></div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 7: LETTER ===== -->
+  <div class="slide" id="slide-7">
+    <div class="slide-content letter-slide">
+      <div class="letter-paper">
+        <div class="letter-header">
+          <div class="letter-deco">🌸 💌 🌸</div>
+          <h2 class="letter-title">Dear Sravanii,</h2>
+        </div>
+        <div class="letter-body" id="letter-body"></div>
+        <div class="letter-footer hidden" id="letter-footer">
+        <p class="letter-sign">With warm wishes,</p>
+          <p class="letter-from">— Someone who will always wish the best for you 🌙</p>
+          <p class="letter-date">July 29, 2026 ✨</p>
+        </div>
+      </div>
+      <button class="btn-magic hidden" id="letter-continue" onclick="nextSlide()">
+        <span>One More Surprise 🎁</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 8: WISHES ===== -->
+  <div class="slide" id="slide-8">
+    <div class="slide-content wishes-slide">
+      <div class="wishes-content">
+        <div class="wish-stars">⭐ ✨ 🌟 ✨ ⭐</div>
+        <h1 class="big-wish">Happy Birthday</h1>
+        <h2 class="big-name">Sravanii!</h2>
+        <div class="wish-date">July 29, 2004 → July 29, 2026 🎊</div>
+        <div class="wish-items">
+          <div class="wish-item">🌸 May every dream come true</div>
+          <div class="wish-item">💖 May love surround you always</div>
+          <div class="wish-item">✨ May this year be your best yet</div>
+          <div class="wish-item">🌟 May you shine brighter than ever</div>
+          <div class="wish-item">🎂 May this day bring you endless joy</div>
+        </div>
+        <button class="btn-magic wishes-btn" onclick="nextSlide()">
+          <span>Final Surprise 🎊</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SLIDE 9: FINAL ===== -->
+  <div class="slide" id="slide-9">
+    <div class="slide-content final-slide">
+      <div class="final-content">
+        <div class="final-emoji">👑</div>
+        <h1 class="final-title">You are loved,<br/><span class="final-name">Sravanii</span></h1>
+        <p class="final-msg">Wishing you a birthday as wonderful as you are — full of laughter, love, and all the best things life has to offer.</p>
+        <div class="final-quote">
+          "Some people make the world more beautiful just by being in it. You are one of them." 🌸
+        </div>
+        <div class="final-actions">
+          <button class="btn-magic" onclick="replay()">
+            <span>🔁 Replay</span>
+          </button>
+          <button class="btn-secondary" onclick="sharePage()">
+            <span>📤 Share</span>
+          </button>
+        </div>
+        <div class="final-footer">Made with 💖 just for you, Sravanii • July 29, 2026</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end slide-wrapper -->
+
+<!-- Progress Dots -->
+<div id="progress-dots">
+  <span class="dot active" onclick="goToSlide(1)"></span>
+  <span class="dot" onclick="goToSlide(2)"></span>
+  <span class="dot" onclick="goToSlide(3)"></span>
+  <span class="dot" onclick="goToSlide(4)"></span>
+  <span class="dot" onclick="goToSlide(5)"></span>
+  <span class="dot" onclick="goToSlide(6)"></span>
+  <span class="dot" onclick="goToSlide(7)"></span>
+  <span class="dot" onclick="goToSlide(8)"></span>
+  <span class="dot" onclick="goToSlide(9)"></span>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
