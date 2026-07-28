@@ -318,7 +318,10 @@ function resetBalloonSpecial() {
     balloonPhase.style.display = '';
     balloonPhase.style.opacity = '1';
   }
-  if (specialPhase) specialPhase.classList.add('hidden');
+  if (specialPhase) {
+    specialPhase.classList.add('hidden');
+    specialPhase.classList.remove('phase-visible');
+  }
 
   // Reset flip cards
   document.querySelectorAll('.flip-card').forEach(c => c.classList.remove('flipped'));
@@ -367,7 +370,6 @@ function popBalloon(balloon) {
     setTimeout(() => {
       const balloonPhase = document.getElementById('balloon-phase');
       const specialPhase  = document.getElementById('special-phase');
-      const slideContent  = document.querySelector('.balloon-special-slide');
 
       if (balloonPhase) {
         balloonPhase.style.transition = 'opacity 0.4s ease';
@@ -377,12 +379,13 @@ function popBalloon(balloon) {
 
       setTimeout(() => {
         if (specialPhase) {
-          // Force re-animation by removing and re-adding
-          specialPhase.style.animation = 'none';
+          // Remove hidden + add phase-visible to trigger CSS animation
           specialPhase.classList.remove('hidden');
-          void specialPhase.offsetHeight;
-          specialPhase.style.animation = '';
+          specialPhase.classList.remove('phase-visible');
+          void specialPhase.offsetHeight; // force reflow so animation restarts
+          specialPhase.classList.add('phase-visible');
         }
+        const slideContent = document.querySelector('.balloon-special-slide');
         if (slideContent) slideContent.scrollTop = 0;
         startSpecialMsg();
       }, 440);
@@ -732,22 +735,18 @@ function startLetter() {
   footer.classList.add('hidden');
   btn.classList.add('hidden');
 
-  // Scroll letter to top
-  const slideEl = document.getElementById('slide-6');
-  const slideContent = slideEl ? slideEl.querySelector('.slide-content') : null;
-  if (slideContent) slideContent.scrollTop = 0;
+  // Scroll letter-paper (now scrollable) to top
+  const paper = document.querySelector('.letter-paper');
+  if (paper) paper.scrollTop = 0;
 
   // ── Type paragraphs ONE AT A TIME — no blank-space flicker ──
   function typeParagraph(pIdx) {
     if (pIdx >= letterParagraphs.length) {
-      // All done
       setTimeout(() => {
         footer.classList.remove('hidden');
         btn.classList.remove('hidden');
-        // Scroll to reveal footer
-        if (slideContent) {
-          slideContent.scrollTo({ top: slideContent.scrollHeight, behavior: 'smooth' });
-        }
+        // Scroll to reveal footer inside paper
+        if (paper) paper.scrollTo({ top: paper.scrollHeight, behavior: 'smooth' });
       }, 350);
       return;
     }
@@ -760,9 +759,7 @@ function startLetter() {
     body.appendChild(p);
 
     // Scroll new paragraph into view
-    if (slideContent) {
-      slideContent.scrollTo({ top: slideContent.scrollHeight, behavior: 'smooth' });
-    }
+    if (paper) paper.scrollTo({ top: paper.scrollHeight, behavior: 'smooth' });
 
     const cursor = document.createElement('span');
     cursor.className = 'cursor';
@@ -778,14 +775,13 @@ function startLetter() {
         else cursor.before(document.createTextNode(ch));
         cIdx++;
         // Scroll every 12 chars to keep cursor visible
-        if (cIdx % 12 === 0 && slideContent) {
-          slideContent.scrollTo({ top: slideContent.scrollHeight, behavior: 'smooth' });
+        if (cIdx % 12 === 0 && paper) {
+          paper.scrollTo({ top: paper.scrollHeight, behavior: 'smooth' });
         }
         const speed = (ch === ',' || ch === '.' || ch === '!' || ch === '?') ? 65 : 22;
         letterTimers.push(setTimeout(typeChar, speed));
       } else {
         cursor.remove();
-        // Short pause between paragraphs, then type next
         letterTimers.push(setTimeout(() => typeParagraph(pIdx + 1), 420));
       }
     }

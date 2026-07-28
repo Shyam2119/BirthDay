@@ -578,9 +578,9 @@ body::before {
   font-size: 1.4rem;
   animation: sparkle 2s ease infinite;
 }
-/* Slide-in animation for special phase */
-#special-phase {
-  animation: fadeInUp 0.5s ease;
+/* Slide-in animation for special phase — class-triggered so it replays */
+#special-phase.phase-visible {
+  animation: fadeInUp 0.55s cubic-bezier(0.22,1,0.36,1) both;
 }
 
 
@@ -969,8 +969,12 @@ body::before {
   box-shadow: 0 20px 60px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.8);
   border: 1px solid rgba(255,107,157,0.3);
   position: relative;
-  overflow: hidden;
+  overflow: hidden;  /* keeps the colour-bar ::before clipped */
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+.letter-paper::-webkit-scrollbar { display: none; }
 .letter-paper::before {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 4px;
@@ -992,8 +996,7 @@ body::before {
 }
 .letter-para {
   margin-bottom: 10px;
-  opacity: 0;
-  animation: letterParaIn 0.4s ease forwards;
+  opacity: 1;  /* JS sets opacity=1 anyway; default 0 causes a flash */
 }
 @keyframes letterParaIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -1355,8 +1358,10 @@ body::before {
 @media (max-width: 360px) {
   .flip-cards-grid { gap: 8px; }
   .flip-card { height: 80px; }
-  .photo-gallery { gap: 6px; }
   .slot-digit { width: 60px; height: 80px; font-size: 2.5rem; }
   .b-body { font-size: 2.8rem; }
   .balloon-wrapper { height: 190px; }
+  .c-card { width: 150px; height: 215px; padding: 5px 5px 36px; }
+  .carousel-stage { height: 300px; }
+  .carousel-track { width: 150px; height: 218px; }
 }
