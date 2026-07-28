@@ -557,11 +557,68 @@ body::before {
   max-width: 320px;
   animation: fadeInUp 0.5s ease;
 }
+/* =====================
+   SLIDE 4: BALLOON POP + WHY YOU'RE SO SPECIAL (MERGED)
+===================== */
+.balloon-special-slide { padding-bottom: 10px; }
+
+/* Special section divider (between balloon + cards) */
+.special-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+.special-divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,107,157,0.5), transparent);
+}
+.special-divider-icon {
+  font-size: 1.4rem;
+  animation: sparkle 2s ease infinite;
+}
+/* Slide-in animation for special phase */
+#special-phase {
+  animation: fadeInUp 0.5s ease;
+}
+
 
 /* =====================
-   SLIDE 5: FLIP CARDS
+   SLIDE 5: WHY YOU'RE SO SPECIAL
 ===================== */
 .cards-slide {}
+
+/* Heartfelt message with typewriter cursor */
+.special-msg-wrap {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,107,157,0.25);
+  border-radius: 16px;
+  padding: 10px 16px;
+  margin: 0 0 14px;
+  backdrop-filter: blur(8px);
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.special-msg {
+  font-family: 'Dancing Script', cursive;
+  font-size: clamp(0.95rem, 3.5vw, 1.2rem);
+  color: rgba(255,255,255,0.9);
+  text-align: center;
+  line-height: 1.6;
+  min-height: 1.4em;
+}
+.special-msg .tw-cursor {
+  display: inline-block;
+  width: 2px; height: 1em;
+  background: var(--pink);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 0.8s step-end infinite;
+}
+
 .flip-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -615,146 +672,210 @@ body::before {
 
 
 /* =====================
-   SLIDE 6: BOOK-FLIP GALLERY
+   SLIDE 5: 3D CIRCULAR ROTATING CAROUSEL
 ===================== */
 .gallery-slide { overflow: visible !important; padding-bottom: 20px; }
 
-/* Scene — 3D perspective container */
-.book-scene {
-  perspective: 1200px;
+/* Stage — provides perspective, significantly taller */
+.carousel-stage {
   position: relative;
-  width: 240px;
-  height: 320px;
-  margin: 10px auto 6px;
-  cursor: pointer;
+  width: 100%;
+  height: 400px;
+  perspective: 1000px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto 0;
+  user-select: none;
 }
 
-/* Stacked shadow cards for depth */
-.book-shadow {
+/* Glow ring behind active card — bigger */
+.carousel-glow-ring {
   position: absolute;
-  width: 240px; height: 320px;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,107,157,0.4) 0%, rgba(199,125,255,0.18) 50%, transparent 70%);
+  pointer-events: none;
+  animation: glow-pulse-ring 2.5s ease-in-out infinite;
+  z-index: 0;
 }
-.book-shadow.s1 { top: 4px; left: 4px; }
-.book-shadow.s2 { top: 8px; left: 8px; }
-.book-shadow.s3 { top: 12px; left: 12px; }
+@keyframes glow-pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
 
-/* Flipping card */
-.book-card {
-  position: absolute;
-  width: 240px; height: 320px;
+/* Track — holds all cards in 3D space, bigger */
+.carousel-track {
+  position: relative;
+  width: 200px;
+  height: 295px;
   transform-style: preserve-3d;
-  transform-origin: center center;
-  z-index: 10;
-  border-radius: 18px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.15);
-  will-change: transform;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
 }
 
-/* Card face shared styles */
-.book-face {
-  position: absolute; inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  border-radius: 18px;
+/* Individual card — bigger */
+.c-card {
+  position: absolute;
+  width: 200px;
+  height: 285px;
+  border-radius: 20px;
   overflow: hidden;
+  backface-visibility: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+  background: linear-gradient(135deg, #ff9a9e, #fecfef);
+  border: 2px solid transparent;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
   display: flex;
   flex-direction: column;
-  background: #fff;
+  /* Centered on track */
+  left: 50%; top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  /* Each card's 3D position set via JS */
 }
-
-/* Back face is pre-rotated 180deg */
-.book-back {
-  transform: rotateY(180deg);
-}
-
-/* Photo area */
-.book-photo-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg,#ff9a9e,#fecfef);
-}
-.book-photo-wrap img {
+.c-card img {
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
-}
-/* Glossy shine overlay */
-.book-photo-wrap::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 50%);
   pointer-events: none;
 }
-
-/* Placeholder emoji (shown when no image) */
-.book-ph {
-  position: absolute; inset: 0;
-  display: none;
-  align-items: center; justify-content: center;
-  font-size: 5rem;
-}
-
-/* Caption bar */
-.book-meta {
-  background: white;
-  padding: 10px 14px 8px;
+.c-card-ph {
+  width: 100%; flex: 1;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  min-height: 50px;
+  justify-content: center;
+  font-size: 5.5rem;
 }
-.book-caption {
-  font-family: 'Poppins', sans-serif;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #3d1a5e;
+.c-card.active {
+  border-color: rgba(255,107,157,0.9);
+  box-shadow:
+    0 0 0 3px rgba(255,107,157,0.7),
+    0 0 40px rgba(255,107,157,0.6),
+    0 25px 60px rgba(0,0,0,0.55);
+  z-index: 10;
 }
-.book-num {
-  font-family: 'Poppins', sans-serif;
+
+/* Nav arrows — bigger */
+.carousel-nav {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.14);
+  border: 2px solid rgba(255,255,255,0.3);
+  color: white;
+  font-size: 1.7rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s ease;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+  line-height: 1;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.carousel-nav:hover {
+  background: rgba(255,107,157,0.45);
+  border-color: var(--pink);
+  transform: translateY(-50%) scale(1.12);
+  box-shadow: 0 0 20px rgba(255,107,157,0.4);
+}
+.carousel-nav.prev { left: 2px; }
+.carousel-nav.next { right: 2px; }
+
+/* Caption */
+.carousel-caption-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0 6px;
+  min-height: 24px;
+}
+.carousel-caption {
+  font-family: 'Dancing Script', cursive;
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 0 12px rgba(255,107,157,0.6);
+  transition: opacity 0.3s ease;
+}
+.carousel-counter {
   font-size: 0.72rem;
-  color: rgba(61,26,94,0.5);
+  color: rgba(255,255,255,0.45);
   font-weight: 500;
 }
 
-/* "Tap" corner arrow */
-.book-corner {
-  position: absolute;
-  bottom: 52px; right: 12px;
-  width: 30px; height: 30px;
-  background: linear-gradient(135deg, #ff6b9d, #c77dff);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: white; font-size: 0.8rem;
-  box-shadow: 0 4px 12px rgba(255,107,157,0.5);
-  animation: pulse-corner 1.5s ease-in-out infinite;
-  z-index: 5;
-}
-@keyframes pulse-corner {
-  0%,100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-}
-
-/* Progress dots */
-.book-dots {
-  display: flex; gap: 7px;
+/* Dots */
+.carousel-dots {
+  display: flex;
+  gap: 7px;
   justify-content: center;
-  margin: 8px 0 4px;
+  margin: 2px 0 8px;
 }
-.bdot {
+.cdot {
   width: 8px; height: 8px;
   border-radius: 50%;
   background: rgba(255,255,255,0.25);
+  cursor: pointer;
   transition: all 0.3s ease;
 }
-.bdot.active {
+.cdot.active {
   background: var(--pink);
   transform: scale(1.4);
   box-shadow: 0 0 8px var(--pink);
 }
+
+/* Fullscreen lightbox */
+.carousel-lightbox {
+  position: fixed; inset: 0;
+  background: rgba(10,0,26,0.92);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(16px);
+  animation: fadeIn 0.3s ease;
+}
+.carousel-lightbox.hidden { display: none !important; }
+.clb-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: clb-zoom-in 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes clb-zoom-in {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+#clb-img {
+  max-width: min(88vw, 440px);
+  max-height: 72vh;
+  border-radius: 18px;
+  object-fit: contain;
+  box-shadow: 0 0 0 2px rgba(255,107,157,0.5), 0 30px 80px rgba(0,0,0,0.6);
+}
+.clb-caption {
+  font-family: 'Dancing Script', cursive;
+  font-size: 1.2rem;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 0 12px rgba(255,107,157,0.7);
+}
+.clb-close {
+  position: absolute;
+  top: -12px; right: -12px;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(255,107,157,0.85);
+  border: none;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s ease;
+}
+.clb-close:hover { transform: scale(1.15) rotate(90deg); }
 
 /* =====================
    SLIDE 7: LETTER
@@ -827,13 +948,16 @@ body::before {
 .letter-date { font-size: 0.75rem; color: #aaa; }
 
 /* =====================
-   SLIDE 8: WISHES
+   SLIDE 8: GRAND FINALE
+   (Wishes + Final merged)
 ===================== */
-.wishes-slide {
+.finale-slide {
   background: none;
 }
-.wishes-content {
-  padding: 20px;
+
+/* Wishes part */
+.finale-wishes {
+  padding: 10px 0 0;
 }
 .wish-stars {
   font-size: 1.5rem;
@@ -865,18 +989,18 @@ body::before {
   font-size: 0.8rem;
   color: rgba(255,255,255,0.5);
   letter-spacing: 1px;
-  margin: 12px 0;
+  margin: 10px 0;
 }
 .wish-items {
-  display: flex; flex-direction: column; gap: 8px;
-  margin: 16px 0;
+  display: flex; flex-direction: column; gap: 7px;
+  margin: 12px 0 0;
 }
 .wish-item {
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 12px;
-  padding: 10px 16px;
-  font-size: 0.88rem;
+  padding: 9px 14px;
+  font-size: 0.85rem;
   color: rgba(255,255,255,0.85);
   text-align: left;
   backdrop-filter: blur(5px);
@@ -891,61 +1015,95 @@ body::before {
   from { opacity: 0; transform: translateX(-20px); }
   to { opacity: 1; transform: translateX(0); }
 }
-.wishes-btn { margin-top: 15px; }
 
-/* =====================
-   SLIDE 9: FINAL
-===================== */
-.final-slide {}
-.final-content { padding: 10px; }
-.final-emoji {
-  font-size: 4rem;
-  animation: royal-bounce 1s ease infinite alternate;
-  display: block; margin-bottom: 10px;
+/* Divider between wishes and final */
+.finale-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 14px;
+}
+.finale-divider::before,
+.finale-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,107,157,0.5), transparent);
+}
+.finale-divider-icon {
+  font-size: 2.2rem;
+  animation: royal-bounce 1.2s ease infinite alternate;
+  display: inline-block;
+  filter: drop-shadow(0 0 14px rgba(255,215,0,0.7));
 }
 @keyframes royal-bounce {
   from { transform: translateY(0) scale(1); }
-  to { transform: translateY(-10px) scale(1.1); }
+  to { transform: translateY(-8px) scale(1.1); }
+}
+
+/* Final message part */
+.finale-final {
+  padding-bottom: 8px;
 }
 .final-title {
   font-family: 'Dancing Script', cursive;
-  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
   color: white;
   line-height: 1.3;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  text-shadow: 0 0 20px rgba(255,107,157,0.6);
 }
 .final-name {
   background: linear-gradient(135deg, #ffd700, #ff9a00, #ff6b9d);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
-  font-size: 1.3em;
+  font-size: 1.2em;
 }
 .final-msg {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: rgba(255,255,255,0.75);
   line-height: 1.7;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 .final-quote {
   background: rgba(255,255,255,0.08);
   border-left: 3px solid var(--pink);
   border-radius: 0 12px 12px 0;
-  padding: 14px 16px;
+  padding: 12px 14px;
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: rgba(255,255,255,0.8);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   text-align: left;
+  box-shadow: 0 0 20px rgba(255,107,157,0.15);
+  animation: glow-quote 3s ease-in-out infinite;
+}
+@keyframes glow-quote {
+  0%, 100% { box-shadow: 0 0 10px rgba(255,107,157,0.15); }
+  50% { box-shadow: 0 0 25px rgba(255,107,157,0.35), 0 0 40px rgba(199,125,255,0.2); }
 }
 .final-actions {
   display: flex; gap: 14px; justify-content: center;
   flex-wrap: wrap;
 }
 .final-footer {
-  margin-top: 20px;
-  font-size: 0.72rem;
+  margin-top: 16px;
+  font-size: 0.7rem;
   color: rgba(255,255,255,0.35);
   letter-spacing: 1px;
+}
+
+/* Floating hearts / sparkle burst for finale */
+.finale-spark {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  animation: finale-rise 3.5s ease forwards;
+}
+@keyframes finale-rise {
+  0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+  80%  { opacity: 0.8; }
+  100% { transform: translateY(-115vh) scale(0.6) rotate(540deg); opacity: 0; }
 }
 
 /* =====================
@@ -1067,41 +1225,32 @@ body::before {
   .cake-deco { font-size: 1.3rem; }
   .cake-flowers { font-size: 0.85rem; }
 
-  /* SLIDE 4 balloons */
-  .balloon-wrapper { height: 220px; }
+  /* SLIDE 4 balloons + special */
+  .balloon-wrapper { height: 200px; }
   .b-body { font-size: 3.2rem; }
   .b-string { height: 40px; }
   .reveal-words { font-size: clamp(1.4rem, 5vw, 2rem); }
   .pop-counter { font-size: 0.78rem; }
-
-  /* SLIDE 5 flip cards */
   .flip-cards-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 9px;
   }
-  .flip-card { height: 90px; }
+  .flip-card { height: 86px; }
   .card-icon { font-size: 1.8rem; }
   .flip-card-back p { font-size: 0.68rem; }
+  .special-msg-wrap { padding: 8px 12px; min-height: 44px; }
+  .special-msg { font-size: 0.88rem; }
+  .special-section-divider { margin: 8px 0 6px; }
 
-  /* SLIDE 6 gallery */
-  .photo-gallery {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-  .photo-caption { font-size: 0.65rem; }
+  /* SLIDE 5 carousel — still large on mobile */
+  .carousel-stage { height: 340px; }
+  .carousel-track { width: 165px; height: 240px; }
+  .c-card { width: 165px; height: 235px; }
+  .carousel-nav { width: 36px; height: 36px; font-size: 1.4rem; }
+  .carousel-caption { font-size: 1rem; }
+  .carousel-caption-wrap { margin: 8px 0 4px; }
 
-  /* Lightbox */
-  .lb-prev { left: -35px; width: 36px; height: 36px; font-size: 1.1rem; }
-  .lb-next { right: -35px; width: 36px; height: 36px; font-size: 1.1rem; }
-  #lightbox-img { max-width: 90vw; }
-
-  /* SLIDE 6 book gallery */
-  .book-scene, .book-card, .book-shadow { width: 210px; height: 280px; }
-  .book-meta { padding: 8px 10px 6px; min-height: 44px; }
-  .book-caption { font-size: 0.72rem; }
-  .book-corner { bottom: 46px; right: 10px; width: 26px; height: 26px; font-size: 0.7rem; }
-
-  /* SLIDE 7 letter */
+  /* SLIDE 6 letter */
   .letter-paper { padding: 18px 14px; border-radius: 14px; }
   .letter-title { font-size: 1.4rem; }
   .letter-body { font-size: 0.8rem; line-height: 1.7; }
@@ -1109,18 +1258,16 @@ body::before {
   .letter-sign { font-size: 0.75rem; }
   .letter-from { font-size: 1rem; }
 
-  /* SLIDE 8 wishes */
+  /* SLIDE 7 finale */
   .big-wish { font-size: clamp(1.6rem, 6vw, 2.5rem); }
   .big-name { font-size: clamp(2rem, 8vw, 3.5rem); }
   .wish-item { font-size: 0.8rem; padding: 8px 12px; }
-
-  /* SLIDE 9 final */
-  .final-emoji { font-size: 3rem; }
-  .final-title { font-size: clamp(1.5rem, 5vw, 2.2rem); }
-  .final-msg { font-size: 0.82rem; }
-  .final-quote { font-size: 0.78rem; }
+  .final-title { font-size: clamp(1.4rem, 5vw, 2rem); }
+  .final-msg { font-size: 0.8rem; }
+  .final-quote { font-size: 0.76rem; }
   .final-actions { flex-direction: column; align-items: center; gap: 10px; }
-  .final-footer { font-size: 0.65rem; }
+  .final-footer { font-size: 0.62rem; }
+  .finale-divider-icon { font-size: 1.8rem; }
 }
 
 /* Very small phones */

@@ -108,145 +108,137 @@
     </div>
   </div>
 
-  <!-- ===== SLIDE 4: BALLOON POP ===== -->
+  <!-- ===== SLIDE 4: BALLOON POP + WHY YOU'RE SO SPECIAL (MERGED) ===== -->
   <div class="slide" id="slide-4">
-    <div class="slide-content balloon-slide">
-      <h2 class="slide-title">Pop the Balloons! 🎈</h2>
-      <p class="slide-sub" id="pop-sub">Pop a balloon to reveal the message! 💌</p>
-      <div class="balloon-game" id="balloon-game">
-        <div class="balloon-wrapper">
-          <div class="game-balloon" data-word="You" onclick="popBalloon(this)" style="--clr:#ff6b9d;--delay:0s;--x:10%">
-            <div class="b-body">🎈</div>
-            <div class="b-string"></div>
-          </div>
-          <div class="game-balloon" data-word="Are" onclick="popBalloon(this)" style="--clr:#ffd93d;--delay:0.3s;--x:28%">
-            <div class="b-body">🎈</div>
-            <div class="b-string"></div>
-          </div>
-          <div class="game-balloon" data-word="So" onclick="popBalloon(this)" style="--clr:#6bcb77;--delay:0.6s;--x:55%">
-            <div class="b-body">🎈</div>
-            <div class="b-string"></div>
-          </div>
-          <div class="game-balloon" data-word="Special!" onclick="popBalloon(this)" style="--clr:#4d96ff;--delay:0.9s;--x:75%">
-            <div class="b-body">🎈</div>
-            <div class="b-string"></div>
-          </div>
-        </div>
-        <div class="pop-counter" id="pop-counter-row">
-          <span id="popped-count">0</span>/4 POPPED
-        </div>
-      </div>
-      <div class="reveal-message hidden" id="reveal-message">
-        <div class="reveal-words" id="reveal-words"></div>
-        <p class="reveal-sub hidden" id="reveal-sub">You truly are, Sravanii 💖<br/>Keep shining like the stars 🌟</p>
-        <p class="reveal-heart">💖</p>
-      </div>
-      <button class="btn-magic hidden" id="balloon-continue" onclick="nextSlide()">
-        <span>Next ✨</span>
-      </button>
-    </div>
-  </div>
+    <div class="slide-content balloon-special-slide">
 
-  <!-- ===== SLIDE 5: FLIP CARDS ===== -->
-  <div class="slide" id="slide-5">
-    <div class="slide-content cards-slide">
-      <h2 class="slide-title">Things That Make You Special ✨</h2>
-      <p class="slide-sub">Tap each card to reveal...</p>
-      <div class="flip-cards-grid" id="flip-cards-grid">
-        <div class="flip-card" onclick="flipCard(this)">
-          <div class="flip-card-inner">
-            <div class="flip-card-front"><span class="card-num">1</span><span class="card-icon">🌸</span></div>
-            <div class="flip-card-back"><p>Your smile lights up every room ☀️</p></div>
+      <!-- PHASE 1: Balloon Pop -->
+      <div id="balloon-phase">
+        <h2 class="slide-title">Pop the Balloons! 🎈</h2>
+        <p class="slide-sub" id="pop-sub">Pop a balloon to reveal the message! 💌</p>
+        <div class="balloon-game" id="balloon-game">
+          <div class="balloon-wrapper">
+            <div class="game-balloon" data-word="You" onclick="popBalloon(this)" style="--clr:#ff6b9d;--delay:0s;--x:10%">
+              <div class="b-body">🎈</div>
+              <div class="b-string"></div>
+            </div>
+            <div class="game-balloon" data-word="Are" onclick="popBalloon(this)" style="--clr:#ffd93d;--delay:0.3s;--x:28%">
+              <div class="b-body">🎈</div>
+              <div class="b-string"></div>
+            </div>
+            <div class="game-balloon" data-word="So" onclick="popBalloon(this)" style="--clr:#6bcb77;--delay:0.6s;--x:55%">
+              <div class="b-body">🎈</div>
+              <div class="b-string"></div>
+            </div>
+            <div class="game-balloon" data-word="Special!" onclick="popBalloon(this)" style="--clr:#4d96ff;--delay:0.9s;--x:75%">
+              <div class="b-body">🎈</div>
+              <div class="b-string"></div>
+            </div>
+          </div>
+          <div class="pop-counter" id="pop-counter-row">
+            <span id="popped-count">0</span>/4 POPPED
           </div>
         </div>
-        <div class="flip-card" onclick="flipCard(this)">
-          <div class="flip-card-inner">
-            <div class="flip-card-front"><span class="card-num">2</span><span class="card-icon">💫</span></div>
-            <div class="flip-card-back"><p>Your laugh is the most beautiful sound 🎵</p></div>
-          </div>
+        <div class="reveal-message hidden" id="reveal-message">
+          <div class="reveal-words" id="reveal-words"></div>
+          <p class="reveal-sub hidden" id="reveal-sub">You truly are, Sravanii 💖<br/>Keep shining like the stars 🌟</p>
+          <p class="reveal-heart">💖</p>
         </div>
-        <div class="flip-card" onclick="flipCard(this)">
-          <div class="flip-card-inner">
-            <div class="flip-card-front"><span class="card-num">3</span><span class="card-icon">💖</span></div>
-            <div class="flip-card-back"><p>Your kindness touches every heart 🌺</p></div>
-          </div>
+      </div>
+
+      <!-- PHASE 2: Why You're So Special (revealed after all balloons popped) -->
+      <div id="special-phase" class="hidden">
+        <div class="special-section-divider">
+          <div class="special-divider-line"></div>
+          <span class="special-divider-icon">✨</span>
+          <div class="special-divider-line"></div>
         </div>
-        <div class="flip-card" onclick="flipCard(this)">
-          <div class="flip-card-inner">
-            <div class="flip-card-front"><span class="card-num">4</span><span class="card-icon">🌟</span></div>
-            <div class="flip-card-back"><p>You make every moment magical ✨</p></div>
-          </div>
+        <h2 class="slide-title" style="margin-bottom:4px;">Why You're So Special ✨</h2>
+        <div class="special-msg-wrap">
+          <p class="special-msg" id="special-msg"></p>
         </div>
-        <div class="flip-card" onclick="flipCard(this)">
-          <div class="flip-card-inner">
-            <div class="flip-card-front"><span class="card-num">5</span><span class="card-icon">🦋</span></div>
-            <div class="flip-card-back"><p>You are fearless, bold & beautiful 🔥</p></div>
+        <div class="flip-cards-grid" id="flip-cards-grid">
+          <div class="flip-card" onclick="flipCard(this)">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><span class="card-num">1</span><span class="card-icon">🌸</span></div>
+              <div class="flip-card-back"><p>Your smile lights up every room ☀️</p></div>
+            </div>
           </div>
-        </div>
-        <div class="flip-card" onclick="flipCard(this)">
-          <div class="flip-card-inner">
-            <div class="flip-card-front"><span class="card-num">6</span><span class="card-icon">🌙</span></div>
-            <div class="flip-card-back"><p>You make the world a better place 🌍</p></div>
+          <div class="flip-card" onclick="flipCard(this)">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><span class="card-num">2</span><span class="card-icon">💫</span></div>
+              <div class="flip-card-back"><p>Your laugh is the most beautiful sound 🎵</p></div>
+            </div>
+          </div>
+          <div class="flip-card" onclick="flipCard(this)">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><span class="card-num">3</span><span class="card-icon">💖</span></div>
+              <div class="flip-card-back"><p>Your kindness touches every heart 🌺</p></div>
+            </div>
+          </div>
+          <div class="flip-card" onclick="flipCard(this)">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><span class="card-num">4</span><span class="card-icon">🌟</span></div>
+              <div class="flip-card-back"><p>You make every moment magical ✨</p></div>
+            </div>
+          </div>
+          <div class="flip-card" onclick="flipCard(this)">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><span class="card-num">5</span><span class="card-icon">🦋</span></div>
+              <div class="flip-card-back"><p>You are fearless, bold &amp; beautiful 🔥</p></div>
+            </div>
+          </div>
+          <div class="flip-card" onclick="flipCard(this)">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><span class="card-num">6</span><span class="card-icon">🌙</span></div>
+              <div class="flip-card-back"><p>You make the world a better place 🌍</p></div>
+            </div>
           </div>
         </div>
       </div>
-      <button class="btn-magic hidden" id="cards-continue" onclick="nextSlide()">
+
+      <button class="btn-magic hidden" id="balloon-continue" onclick="nextSlide()">
         <span>See the Moments 📸</span>
       </button>
     </div>
   </div>
 
-  <!-- ===== SLIDE 6: PHOTO BOOK ===== -->
-  <div class="slide" id="slide-6">
+  <!-- ===== SLIDE 5: 3D CIRCULAR ROTATING CAROUSEL ===== -->
+  <div class="slide" id="slide-5">
     <div class="slide-content gallery-slide">
       <h2 class="slide-title">Beautiful Moments 📸</h2>
-      <p class="slide-sub" id="book-hint-text">Tap the photo to flip ➜</p>
+      <p class="slide-sub" id="carousel-hint">Swipe or tap to explore ✨</p>
 
-      <!-- Book Scene -->
-      <div class="book-scene" id="book-scene" onclick="flipBookPage()">
-        <!-- Stack shadow cards (visual depth) -->
-        <div class="book-shadow s3"></div>
-        <div class="book-shadow s2"></div>
-        <div class="book-shadow s1"></div>
-
-        <!-- Main flipping card -->
-        <div class="book-card" id="book-card">
-          <!-- FRONT face -->
-          <div class="book-face book-front" id="book-front">
-            <div class="book-photo-wrap">
-              <img id="book-img-front" src="" alt="Photo"
-                onerror="this.style.display='none';document.getElementById('book-ph-front').style.display='flex'" />
-              <div class="book-ph" id="book-ph-front">🌸</div>
-            </div>
-            <div class="book-meta">
-              <span class="book-caption" id="book-cap-front"></span>
-              <span class="book-num" id="book-num-front"></span>
-            </div>
-            <div class="book-corner">➜</div>
-          </div>
-          <!-- BACK face (next photo pre-loaded) -->
-          <div class="book-face book-back" id="book-back">
-            <div class="book-photo-wrap">
-              <img id="book-img-back" src="" alt="Photo"
-                onerror="this.style.display='none';document.getElementById('book-ph-back').style.display='flex'" />
-              <div class="book-ph" id="book-ph-back">💫</div>
-            </div>
-            <div class="book-meta">
-              <span class="book-caption" id="book-cap-back"></span>
-              <span class="book-num" id="book-num-back"></span>
-            </div>
-          </div>
+      <!-- Carousel wrapper -->
+      <div class="carousel-stage" id="carousel-stage">
+        <div class="carousel-track" id="carousel-track">
+          <!-- Items injected by JS -->
         </div>
+
+        <!-- Nav arrows -->
+        <button class="carousel-nav prev" id="carousel-prev" onclick="carouselPrev()" aria-label="Previous">‹</button>
+        <button class="carousel-nav next" id="carousel-next" onclick="carouselNext()" aria-label="Next">›</button>
+
+        <!-- Glow ring -->
+        <div class="carousel-glow-ring"></div>
       </div>
 
-      <!-- Progress dots -->
-      <div class="book-dots" id="book-dots">
-        <span class="bdot active"></span>
-        <span class="bdot"></span>
-        <span class="bdot"></span>
-        <span class="bdot"></span>
-        <span class="bdot"></span>
-        <span class="bdot"></span>
+      <!-- Caption -->
+      <div class="carousel-caption-wrap">
+        <div class="carousel-caption" id="carousel-caption"></div>
+        <div class="carousel-counter" id="carousel-counter"></div>
+      </div>
+
+      <!-- Dots -->
+      <div class="carousel-dots" id="carousel-dots"></div>
+
+      <!-- Fullscreen lightbox -->
+      <div class="carousel-lightbox hidden" id="carousel-lightbox" onclick="closeLightboxCarousel(event)">
+        <div class="clb-inner">
+          <img id="clb-img" src="" alt="Photo" />
+          <div class="clb-caption" id="clb-caption"></div>
+          <button class="clb-close" onclick="closeLightboxCarousel(event)" aria-label="Close">✕</button>
+        </div>
       </div>
 
       <button class="btn-magic hidden" id="gallery-continue" onclick="nextSlide()">
@@ -255,9 +247,8 @@
     </div>
   </div>
 
-
-  <!-- ===== SLIDE 7: LETTER ===== -->
-  <div class="slide" id="slide-7">
+  <!-- ===== SLIDE 6: LETTER ===== -->
+  <div class="slide" id="slide-6">
     <div class="slide-content letter-slide">
       <div class="letter-paper">
         <div class="letter-header">
@@ -266,21 +257,23 @@
         </div>
         <div class="letter-body" id="letter-body"></div>
         <div class="letter-footer hidden" id="letter-footer">
-        <p class="letter-sign">With warm wishes,</p>
+          <p class="letter-sign">With warm wishes,</p>
           <p class="letter-from">— Someone who will always wish the best for you 🌙</p>
           <p class="letter-date">July 29, 2026 ✨</p>
         </div>
       </div>
       <button class="btn-magic hidden" id="letter-continue" onclick="nextSlide()">
-        <span>One More Surprise 🎁</span>
+        <span>Grand Finale 🎊</span>
       </button>
     </div>
   </div>
 
-  <!-- ===== SLIDE 8: WISHES ===== -->
-  <div class="slide" id="slide-8">
-    <div class="slide-content wishes-slide">
-      <div class="wishes-content">
+  <!-- ===== SLIDE 7: GRAND FINALE (Wishes + Final Surprise merged) ===== -->
+  <div class="slide" id="slide-7">
+    <div class="slide-content finale-slide">
+
+      <!-- PART 1: Birthday Wishes -->
+      <div class="finale-wishes" id="finale-wishes">
         <div class="wish-stars">⭐ ✨ 🌟 ✨ ⭐</div>
         <h1 class="big-wish">Happy Birthday</h1>
         <h2 class="big-name">Sravanii!</h2>
@@ -292,18 +285,15 @@
           <div class="wish-item">🌟 May you shine brighter than ever</div>
           <div class="wish-item">🎂 May this day bring you endless joy</div>
         </div>
-        <button class="btn-magic wishes-btn" onclick="nextSlide()">
-          <span>Final Surprise 🎊</span>
-        </button>
       </div>
-    </div>
-  </div>
 
-  <!-- ===== SLIDE 9: FINAL ===== -->
-  <div class="slide" id="slide-9">
-    <div class="slide-content final-slide">
-      <div class="final-content">
-        <div class="final-emoji">👑</div>
+      <!-- DIVIDER -->
+      <div class="finale-divider">
+        <span class="finale-divider-icon">👑</span>
+      </div>
+
+      <!-- PART 2: Final Heartfelt Message -->
+      <div class="finale-final" id="finale-final">
         <h1 class="final-title">You are loved,<br/><span class="final-name">Sravanii</span></h1>
         <p class="final-msg">Wishing you a birthday as wonderful as you are — full of laughter, love, and all the best things life has to offer.</p>
         <div class="final-quote">
@@ -319,6 +309,7 @@
         </div>
         <div class="final-footer">Made with 💖 just for you, Sravanii • July 29, 2026</div>
       </div>
+
     </div>
   </div>
 
@@ -333,8 +324,6 @@
   <span class="dot" onclick="goToSlide(5)"></span>
   <span class="dot" onclick="goToSlide(6)"></span>
   <span class="dot" onclick="goToSlide(7)"></span>
-  <span class="dot" onclick="goToSlide(8)"></span>
-  <span class="dot" onclick="goToSlide(9)"></span>
 </div>
 
 <script src="script.js"></script>
