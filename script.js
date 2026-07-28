@@ -486,35 +486,45 @@ function initCarousel() {
       card.className = 'c-card';
       card.dataset.index = i;
 
-      // Placeholder shown immediately; image loaded on top
-      const ph = document.createElement('div');
-      ph.className = 'c-card-ph';
-      ph.textContent = placeholderEmojis[i];
-      ph.style.background = placeholderGrads[i];
-      card.style.background = placeholderGrads[i];
-      card.appendChild(ph);
+      // ── Photo area (fills bezel aperture) ──
+      const photoWrap = document.createElement('div');
+      photoWrap.className = 'c-photo-wrap';
+      photoWrap.style.background = placeholderGrads[i];
 
+      // Placeholder emoji (visible until image loads)
+      const ph = document.createElement('div');
+      ph.className = 'c-photo-ph';
+      ph.textContent = placeholderEmojis[i];
+      photoWrap.appendChild(ph);
+
+      // Actual image (overlays placeholder when loaded)
       const img = document.createElement('img');
       img.alt = getCaption(i);
-      img.style.position = 'absolute';
-      img.style.inset = '0';
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'cover';
-      img.style.borderRadius = '18px';
       img.src = getPhotoUrl(i);
       img.onerror = function() { this.style.display = 'none'; };
-      card.appendChild(img);
+      photoWrap.appendChild(img);
+
+      // Glossy sheen overlay
+      const shine = document.createElement('div');
+      shine.className = 'c-photo-shine';
+      photoWrap.appendChild(shine);
+
+      card.appendChild(photoWrap);
+
+      // ── Caption label (in the dark bezel strip below photo) ──
+      const label = document.createElement('div');
+      label.className = 'c-photo-label';
+      label.textContent = getCaption(i);
+      card.appendChild(label);
 
       // Click: active → lightbox; others → navigate toward it
       card.addEventListener('click', () => {
-        const idx  = parseInt(card.dataset.index);
+        const idx = parseInt(card.dataset.index);
         if (idx === carouselIndex) {
           openLightboxCarousel(idx);
         } else {
-          // Step one card at a time toward clicked card
           let diff = idx - carouselIndex;
-          if (diff > TOTAL_PHOTOS / 2) diff -= TOTAL_PHOTOS;
+          if (diff >  TOTAL_PHOTOS / 2) diff -= TOTAL_PHOTOS;
           if (diff < -TOTAL_PHOTOS / 2) diff += TOTAL_PHOTOS;
           diff > 0 ? carouselNext() : carouselPrev();
         }
@@ -559,11 +569,14 @@ function renderCarousel() {
     const isActive = rel === 0;
     const absRel   = Math.abs(rel);
 
-    const rotY      = rel * 27;                                        // Y-rotation
-    const translateX = rel * 115;                                      // horizontal spread
-    const translateZ = isActive ? 80 : Math.max(-80, 40 - absRel * 50);
-    const scale      = isActive ? 1.15 : Math.max(0.58, 1 - absRel * 0.2);
-    const opacity    = absRel > 2 ? 0 : Math.max(0.28, 1 - absRel * 0.32);
+    // ── Premium 3D coverflow — dramatic physical depth ──
+    const rotY       = rel * 48;        // strong side tilt (±48° for ±1)
+    const translateX = rel * 125;       // good spread without clipping
+    const translateZ = isActive
+      ? 110
+      : Math.max(-90, 30 - absRel * 65);  // depth falloff
+    const scale   = isActive ? 1.1  : Math.max(0.52, 1 - absRel * 0.24);
+    const opacity = absRel > 2 ? 0   : Math.max(0.22, 1 - absRel * 0.38);
 
     card.style.transform = `
       translateX(-50%) translateY(-50%)
@@ -720,55 +733,66 @@ function startLetter() {
   btn.classList.add('hidden');
 
   // Scroll letter to top
-  const paper = document.querySelector('.letter-paper');
-  if (paper) paper.scrollTop = 0;
+  const slideEl = document.getElementById('slide-6');
+  const slideContent = slideEl ? slideEl.querySelector('.slide-content') : null;
+  if (slideContent) slideContent.scrollTop = 0;
 
-  let paraDelay = 0;
+  // ── Type paragraphs ONE AT A TIME — no blank-space flicker ──
+  function typeParagraph(pIdx) {
+    if (pIdx >= letterParagraphs.length) {
+      // All done
+      setTimeout(() => {
+        footer.classList.remove('hidden');
+        btn.classList.remove('hidden');
+        // Scroll to reveal footer
+        if (slideContent) {
+          slideContent.scrollTo({ top: slideContent.scrollHeight, behavior: 'smooth' });
+        }
+      }, 350);
+      return;
+    }
 
-  letterParagraphs.forEach((para, pIdx) => {
-    const p = document.createElement('p');
+    const para = letterParagraphs[pIdx];
+    const p    = document.createElement('p');
     p.className = 'letter-para';
-    p.style.opacity = '1';
+    p.style.opacity   = '1';
     p.style.animation = 'none';
     body.appendChild(p);
+
+    // Scroll new paragraph into view
+    if (slideContent) {
+      slideContent.scrollTo({ top: slideContent.scrollHeight, behavior: 'smooth' });
+    }
 
     const cursor = document.createElement('span');
     cursor.className = 'cursor';
     p.appendChild(cursor);
 
-    const t1 = setTimeout(() => {
-      let cIdx = 0;
-      const chars = para.split('');
+    const chars = para.split('');
+    let cIdx = 0;
 
-      function typeChar() {
-        if (cIdx < chars.length) {
-          const ch = chars[cIdx];
-          if (ch === '\n') {
-            cursor.before(document.createElement('br'));
-          } else {
-            cursor.before(document.createTextNode(ch));
-          }
-          cIdx++;
-          const speed = (ch === ',' || ch === '.' || ch === '!') ? 60 : 22;
-          letterTimers.push(setTimeout(typeChar, speed));
-        } else {
-          cursor.remove();
-          if (pIdx === letterParagraphs.length - 1) {
-            setTimeout(() => {
-              footer.classList.remove('hidden');
-              btn.classList.remove('hidden');
-            }, 400);
-          }
+    function typeChar() {
+      if (cIdx < chars.length) {
+        const ch = chars[cIdx];
+        if (ch === '\n') cursor.before(document.createElement('br'));
+        else cursor.before(document.createTextNode(ch));
+        cIdx++;
+        // Scroll every 12 chars to keep cursor visible
+        if (cIdx % 12 === 0 && slideContent) {
+          slideContent.scrollTo({ top: slideContent.scrollHeight, behavior: 'smooth' });
         }
+        const speed = (ch === ',' || ch === '.' || ch === '!' || ch === '?') ? 65 : 22;
+        letterTimers.push(setTimeout(typeChar, speed));
+      } else {
+        cursor.remove();
+        // Short pause between paragraphs, then type next
+        letterTimers.push(setTimeout(() => typeParagraph(pIdx + 1), 420));
       }
-      typeChar();
-    }, paraDelay);
+    }
+    typeChar();
+  }
 
-    letterTimers.push(t1);
-    // Estimate time for this paragraph: ~22ms/char + pauses at punctuation + 400ms gap
-    const punctCount = (para.match(/[,.!]/g) || []).length;
-    paraDelay += para.length * 22 + punctCount * 38 + 400;
-  });
+  typeParagraph(0);
 }
 
 

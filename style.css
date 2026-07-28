@@ -672,89 +672,169 @@ body::before {
 
 
 /* =====================
-   SLIDE 5: 3D CIRCULAR ROTATING CAROUSEL
+   SLIDE 5: 3D CIRCULAR ROTATING CAROUSEL — PREMIUM PHOTO DISPLAY
 ===================== */
 .gallery-slide { overflow: visible !important; padding-bottom: 20px; }
 
-/* Stage — provides perspective, significantly taller */
+/* Stage — elevated perspective for physical depth feel */
 .carousel-stage {
   position: relative;
   width: 100%;
-  height: 400px;
-  perspective: 1000px;
+  height: 420px;
+  perspective: 1100px;
+  perspective-origin: 50% 44%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 8px auto 0;
+  margin: 6px auto 0;
   user-select: none;
 }
+/* Purple surface glow under the cards (like a display shelf) */
+.carousel-stage::before {
+  content: '';
+  position: absolute;
+  bottom: 22px; left: 8%; right: 8%;
+  height: 55px;
+  background: radial-gradient(ellipse, rgba(199,125,255,0.22) 0%, transparent 70%);
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(10px);
+  z-index: 0;
+}
 
-/* Glow ring behind active card — bigger */
+/* Pulsing glow ring (slightly larger) */
 .carousel-glow-ring {
   position: absolute;
-  width: 260px; height: 260px;
+  width: 240px; height: 240px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,107,157,0.4) 0%, rgba(199,125,255,0.18) 50%, transparent 70%);
+  background: radial-gradient(circle,
+    rgba(255,107,157,0.28) 0%,
+    rgba(199,125,255,0.12) 50%,
+    transparent 70%);
   pointer-events: none;
-  animation: glow-pulse-ring 2.5s ease-in-out infinite;
+  animation: glow-pulse-ring 2.8s ease-in-out infinite;
   z-index: 0;
 }
 @keyframes glow-pulse-ring {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.12); opacity: 1; }
+  0%, 100% { transform: scale(1);    opacity: 0.7; }
+  50%       { transform: scale(1.14); opacity: 1;   }
 }
 
-/* Track — holds all cards in 3D space, bigger */
+/* Track — 3D space container */
 .carousel-track {
   position: relative;
-  width: 200px;
-  height: 295px;
+  width: 205px;
+  height: 300px;
   transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1;
 }
 
-/* Individual card — bigger */
+/* ── PHOTO CARD — looks like a physical framed print ── */
 .c-card {
   position: absolute;
-  width: 200px;
-  height: 285px;
-  border-radius: 20px;
-  overflow: hidden;
-  backface-visibility: hidden;
+  width: 205px;
+  height: 290px;
+  /* Dark bezel frame — like a real photo mount */
+  background: #0d0422;
+  padding: 8px 8px 48px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255,255,255,0.06);
+  box-shadow:
+    0 2px 8px  rgba(0,0,0,0.7),
+    0 16px 45px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.04);
   cursor: pointer;
-  transition: box-shadow 0.4s ease, border-color 0.4s ease;
-  background: linear-gradient(135deg, #ff9a9e, #fecfef);
-  border: 2px solid transparent;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-  display: flex;
-  flex-direction: column;
-  /* Centered on track */
+  /* Centre on track */
   left: 50%; top: 50%;
   transform: translateX(-50%) translateY(-50%);
-  /* Each card's 3D position set via JS */
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+  will-change: transform;
+  overflow: visible;
+  backface-visibility: hidden;
 }
-.c-card img {
+
+/* Photo area — fills the bezel aperture */
+.c-photo-wrap {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+/* Placeholder gradient + emoji */
+.c-photo-ph {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 5rem;
+}
+/* Actual photo */
+.c-photo-wrap img {
+  position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
   display: block;
   pointer-events: none;
+  border-radius: 3px;
 }
-.c-card-ph {
-  width: 100%; flex: 1;
+/* Diagonal gloss sheen (like a real photo print) */
+.c-photo-shine {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.18) 0%,
+    rgba(255,255,255,0.04) 35%,
+    transparent 60%
+  );
+  pointer-events: none;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+/* Caption strip at bottom of card (polaroid label area) */
+.c-photo-label {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 5.5rem;
+  font-family: 'Dancing Script', cursive;
+  font-size: 0.84rem;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  padding: 0 8px;
+  letter-spacing: 0.4px;
+  border-radius: 0 0 8px 8px;
+  transition: color 0.35s ease;
 }
+
+/* ── ACTIVE CARD ── pops forward with glow + shadow on surface */
 .c-card.active {
-  border-color: rgba(255,107,157,0.9);
+  border-color: rgba(255,107,157,0.65);
   box-shadow:
-    0 0 0 3px rgba(255,107,157,0.7),
-    0 0 40px rgba(255,107,157,0.6),
-    0 25px 60px rgba(0,0,0,0.55);
+    0 0 0 2px  rgba(255,107,157,0.5),
+    0 0 24px   rgba(255,107,157,0.45),
+    0 0 55px   rgba(199,125,255,0.2),
+    0 28px 75px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.06);
   z-index: 10;
 }
+/* Drop shadow on surface under active card */
+.c-card.active::after {
+  content: '';
+  position: absolute;
+  bottom: -22px; left: 12%; right: 12%;
+  height: 22px;
+  background: radial-gradient(ellipse, rgba(255,107,157,0.35), transparent 70%);
+  border-radius: 50%;
+  filter: blur(8px);
+  pointer-events: none;
+}
+.c-card.active .c-photo-label {
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 0 10px rgba(255,107,157,0.5);
+}
+
 
 /* Nav arrows — bigger */
 .carousel-nav {
@@ -1242,10 +1322,11 @@ body::before {
   .special-msg { font-size: 0.88rem; }
   .special-section-divider { margin: 8px 0 6px; }
 
-  /* SLIDE 5 carousel — still large on mobile */
-  .carousel-stage { height: 340px; }
-  .carousel-track { width: 165px; height: 240px; }
-  .c-card { width: 165px; height: 235px; }
+  /* SLIDE 5 carousel — premium photo cards on mobile */
+  .carousel-stage { height: 355px; }
+  .carousel-track { width: 170px; height: 248px; }
+  .c-card { width: 170px; height: 242px; padding: 6px 6px 40px; }
+  .c-photo-label { height: 40px; font-size: 0.78rem; }
   .carousel-nav { width: 36px; height: 36px; font-size: 1.4rem; }
   .carousel-caption { font-size: 1rem; }
   .carousel-caption-wrap { margin: 8px 0 4px; }
