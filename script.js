@@ -52,7 +52,17 @@ window.addEventListener('DOMContentLoaded', () => {
   startConfetti();
   showSlide(1);
   setupAutoMusic();
+  setupTouchHandlers();
 });
+
+function setupTouchHandlers() {
+  const env = document.getElementById('envelope');
+  if (env) {
+    env.addEventListener('touchend', (e) => {
+      openEnvelope();
+    }, { passive: true });
+  }
+}
 
 // Auto-start music on first interaction
 function setupAutoMusic() {
@@ -130,6 +140,12 @@ function replay() {
   if (lb) lb.classList.add('hidden');
   document.body.style.overflow = '';
 
+  // Reset continue buttons on all slides
+  ['age-continue', 'cake-continue', 'balloon-continue', 'gallery-continue', 'letter-continue'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.classList.add('hidden');
+  });
+
   // Reset candles
   document.querySelectorAll('.candle').forEach(c => c.classList.remove('blown'));
 
@@ -146,7 +162,6 @@ function replay() {
   });
   document.getElementById('popped-count').textContent = '0';
   document.getElementById('reveal-message').classList.add('hidden');
-  document.getElementById('balloon-continue').classList.add('hidden');
 
   // Reset balloon/special phase visibility
   const specialPhase = document.getElementById('special-phase');
@@ -163,25 +178,22 @@ function replay() {
   // Reset letter
   document.getElementById('letter-body').innerHTML = '';
   document.getElementById('letter-footer').classList.add('hidden');
-  document.getElementById('letter-continue').classList.add('hidden');
 
-  // Reset envelope & welcome reveal on Page 1 (show welcome screen directly for smooth replay)
+  // Reset envelope & welcome reveal on Page 1 completely to pristine unopened state
   const env = document.getElementById('envelope');
   const welcomeReveal = document.getElementById('welcome-reveal');
   if (env) {
-    env.className = 'envelope opened';
-    env.style.display = 'none';
+    env.className = 'envelope';
+    env.removeAttribute('style');
   }
   if (welcomeReveal) {
-    welcomeReveal.className = 'welcome-text';
-    welcomeReveal.style.display = 'block';
-    welcomeReveal.style.animation = 'fadeInUp 0.6s ease';
+    welcomeReveal.className = 'welcome-text hidden';
+    welcomeReveal.removeAttribute('style');
   }
 
   // Reset cake
   document.getElementById('candle-counter').textContent = 'Tap the cake to blow all candles! 🌬️';
   document.getElementById('wish-bubble').classList.add('hidden');
-  document.getElementById('cake-continue').classList.add('hidden');
 
   // Reset carousel index
   carouselIndex = 0;
@@ -201,12 +213,14 @@ function onSlideEnter(n) {
 }
 
 
+// ===== SLIDE 1: ENVELOPE =====
 function openEnvelope() {
   const env = document.getElementById('envelope');
   if (!env || env.classList.contains('opened')) return;
   env.classList.add('opened');
   setTimeout(() => {
-    env.style.transform = 'scale(0.9)';
+    env.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+    env.style.transform = 'scale(0.88)';
     env.style.opacity = '0';
     setTimeout(() => {
       env.style.display = 'none';
@@ -218,8 +232,8 @@ function openEnvelope() {
         welcome.style.animation = 'fadeInUp 0.8s ease';
       }
       spawnConfettiBurst();
-    }, 400);
-  }, 500);
+    }, 380);
+  }, 450);
 }
 
 
