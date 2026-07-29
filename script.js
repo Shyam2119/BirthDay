@@ -59,8 +59,11 @@ function setupTouchHandlers() {
   const env = document.getElementById('envelope');
   if (env) {
     env.addEventListener('touchend', (e) => {
-      openEnvelope();
-    }, { passive: true });
+      if (!env.classList.contains('opened')) {
+        e.preventDefault();
+        openEnvelope();
+      }
+    }, { passive: false });
   }
 }
 
@@ -232,6 +235,13 @@ function openEnvelope() {
         welcome.style.animation = 'fadeInUp 0.8s ease';
       }
       spawnConfettiBurst();
+
+      // Automatically advance to Next Page (Slide 2) after envelope opening reveal
+      setTimeout(() => {
+        if (currentSlide === 1) {
+          nextSlide();
+        }
+      }, 1100);
     }, 380);
   }, 450);
 }
