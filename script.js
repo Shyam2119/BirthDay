@@ -165,16 +165,17 @@ function replay() {
   document.getElementById('letter-footer').classList.add('hidden');
   document.getElementById('letter-continue').classList.add('hidden');
 
-  // Reset envelope & welcome reveal on Page 1 completely
+  // Reset envelope & welcome reveal on Page 1 (show welcome screen directly for smooth replay)
   const env = document.getElementById('envelope');
   const welcomeReveal = document.getElementById('welcome-reveal');
   if (env) {
-    env.className = 'envelope';
-    env.removeAttribute('style');
+    env.className = 'envelope opened';
+    env.style.display = 'none';
   }
   if (welcomeReveal) {
-    welcomeReveal.className = 'welcome-text hidden';
-    welcomeReveal.removeAttribute('style');
+    welcomeReveal.className = 'welcome-text';
+    welcomeReveal.style.display = 'block';
+    welcomeReveal.style.animation = 'fadeInUp 0.6s ease';
   }
 
   // Reset cake
