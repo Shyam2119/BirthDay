@@ -44,6 +44,8 @@ let musicPlaying = false;
 let bgBalloonInterval = null;
 let confettiInterval = null;
 let ageAnimDone = false;
+let envelopeTimers = [];
+let envelopeLockedUntil = 0;
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
@@ -59,10 +61,9 @@ function setupTouchHandlers() {
   const env = document.getElementById('envelope');
   if (env) {
     env.addEventListener('touchend', (e) => {
-      if (!env.classList.contains('opened')) {
-        e.preventDefault();
-        openEnvelope();
-      }
+      if (env.classList.contains('opened') || Date.now() < envelopeLockedUntil) return;
+      e.preventDefault();
+      openEnvelope();
     }, { passive: false });
   }
 }
@@ -122,12 +123,21 @@ function goToSlide(n) {
   showSlide(n);
 }
 
+function clearEnvelopeTimers() {
+  envelopeTimers.forEach(t => clearTimeout(t));
+  envelopeTimers = [];
+}
+
 function replay() {
   // Stop all running timers
   stopCarouselAuto();
+  clearEnvelopeTimers();
   if (specialMsgTimer) { clearTimeout(specialMsgTimer); specialMsgTimer = null; }
   letterTimers.forEach(t => clearTimeout(t));
   letterTimers = [];
+
+  // Ignore envelope taps briefly so the same Replay tap/ghost click cannot open it
+  envelopeLockedUntil = Date.now() + 450;
 
   currentSlide = 1;
   candlesBlown = 0;
@@ -220,12 +230,16 @@ function onSlideEnter(n) {
 function openEnvelope() {
   const env = document.getElementById('envelope');
   if (!env || env.classList.contains('opened')) return;
+  if (Date.now() < envelopeLockedUntil) return;
+
+  clearEnvelopeTimers();
   env.classList.add('opened');
-  setTimeout(() => {
+
+  envelopeTimers.push(setTimeout(() => {
     env.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
     env.style.transform = 'scale(0.88)';
     env.style.opacity = '0';
-    setTimeout(() => {
+    envelopeTimers.push(setTimeout(() => {
       env.style.display = 'none';
       const welcome = document.getElementById('welcome-reveal');
       if (welcome) {
@@ -235,15 +249,9 @@ function openEnvelope() {
         welcome.style.animation = 'fadeInUp 0.8s ease';
       }
       spawnConfettiBurst();
-
-      // Automatically advance to Next Page (Slide 2) after envelope opening reveal
-      setTimeout(() => {
-        if (currentSlide === 1) {
-          nextSlide();
-        }
-      }, 1100);
-    }, 380);
-  }, 450);
+      // Stay on welcome until user taps "Let's Begin"
+    }, 380));
+  }, 450));
 }
 
 
