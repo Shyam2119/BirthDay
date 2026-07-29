@@ -108,6 +108,10 @@ function revealContinueBtn(id) {
   btn.classList.remove('btn-enter');
   void btn.offsetHeight;
   btn.classList.add('btn-enter');
+  // Ensure the button is visible on mobile (often below the fold)
+  requestAnimationFrame(() => {
+    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
 }
 
 function setupEnvelopeInteraction() {
@@ -402,6 +406,8 @@ function replay() {
 
   // Reset carousel index
   carouselIndex = 0;
+  carouselSeenPhotos = new Set();
+  galleryContinueReady = false;
 
   showSlide(1);
 }
@@ -685,7 +691,7 @@ function flipCard(card) {
       if (currentSlide !== 4 || cardsFlipped < 3) return;
       revealContinueBtn('balloon-continue');
       spawnConfettiBurst();
-    }, 600);
+    }, 400);
   }
 }
 
@@ -739,6 +745,8 @@ let carouselIndex    = 0;
 let carouselAutoTimer = null;
 let carouselDragging  = false;
 let carouselBuilt     = false;  // prevent duplicate DOM build
+let carouselSeenPhotos = new Set();
+let galleryContinueReady = false;
 
 function getPhotoUrl(i) {
   const cfg = PHOTO_CONFIG[i];
@@ -840,20 +848,26 @@ function initCarousel() {
   }
 
   carouselIndex = 0;
+  carouselSeenPhotos = new Set();
+  galleryContinueReady = false;
   clearCarouselSeenTimer();
   renderCarousel();
   startCarouselAuto();
 
   document.getElementById('gallery-continue').classList.add('hidden');
+  document.getElementById('gallery-continue').classList.remove('btn-enter');
   document.getElementById('carousel-hint').textContent = 'Swipe or tap to explore ✨';
+
+  // Fallback so users never get stuck without a next button
+  carouselSeenTimer = setTimeout(() => {
+    carouselSeenTimer = null;
+    if (currentSlide === 5) showGalleryContinue();
+  }, 10000);
 }
 
 function renderCarousel() {
   const cards = document.querySelectorAll('.c-card');
   const n     = TOTAL_PHOTOS;
-
-  // Track whether we've already triggered the "all seen" prompt this session
-  const activeIsLast = carouselIndex === TOTAL_PHOTOS - 1;
 
   cards.forEach((card, i) => {
     let rel = i - carouselIndex;
@@ -904,20 +918,22 @@ function renderCarousel() {
     d.classList.toggle('active', i === carouselIndex);
   });
 
-  // "All seen" — show once when user reaches last photo
-  if (activeIsLast) {
-    const hint = document.getElementById('carousel-hint');
-    if (hint && hint.textContent !== '✨ You\'ve seen them all!') {
-      clearCarouselSeenTimer();
-      carouselSeenTimer = setTimeout(() => {
-        carouselSeenTimer = null;
-        if (currentSlide !== 5 || carouselIndex !== TOTAL_PHOTOS - 1) return;
-        hint.textContent = '✨ You\'ve seen them all!';
-        revealContinueBtn('gallery-continue');
-        spawnConfettiBurst();
-      }, 500);
-    }
+  carouselSeenPhotos.add(carouselIndex);
+
+  // Show continue once the last photo is reached, or every photo has been seen
+  if (carouselIndex === TOTAL_PHOTOS - 1 || carouselSeenPhotos.size >= TOTAL_PHOTOS) {
+    showGalleryContinue();
   }
+}
+
+function showGalleryContinue() {
+  if (galleryContinueReady || currentSlide !== 5) return;
+  galleryContinueReady = true;
+  clearCarouselSeenTimer();
+  const hint = document.getElementById('carousel-hint');
+  if (hint) hint.textContent = '✨ You\'ve seen them all!';
+  revealContinueBtn('gallery-continue');
+  spawnConfettiBurst();
 }
 
 function carouselNext() {
