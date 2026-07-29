@@ -8,22 +8,28 @@
 // Example: 'https://drive.google.com/file/d/1aBcD.../view'
 // ============================================================
 const PHOTO_CONFIG = [
-  { url: '', caption: 'Sunshine Girl ☀️' },      // photo 1 → paste drive link
-  { url: '', caption: 'Simply Stunning ✨' },     // photo 2
-  { url: '', caption: 'Forever Glowing 🌸' },    // photo 3
-  { url: '', caption: 'Pure Joy 🌟' },           // photo 4
-  { url: '', caption: 'Radiant Soul 💫' },       // photo 5
-  { url: '', caption: 'Birthday Queen 👑' },     // photo 6
+  { url: 'https://drive.google.com/file/d/10Bcl138d5Q9NbgkzQpOZYyfmQStBEVAZ/view?usp=drivesdk', caption: 'Sunshine Girl ☀️' },
+  { url: 'https://drive.google.com/file/d/1HEbNNOKfchne2ni7NVu3fXbQf9rPCwtC/view?usp=drivesdk', caption: 'Simply Stunning ✨' },
+  { url: 'https://drive.google.com/file/d/1wd5OysXqC8mXjcGUyIIFLAMc3aC1OeD3/view?usp=drivesdk', caption: 'Forever Glowing 🌸' },
+  { url: 'https://drive.google.com/file/d/1hX0TrR9jxj6dXcusLBYN8P4X9daeY9J-/view?usp=drivesdk', caption: 'Pure Joy 🌟' },
+  { url: 'https://drive.google.com/file/d/1Pkl14AutCTr-CMbhx7wc5U-prrgzLAzv/view?usp=drivesdk', caption: 'Radiant Soul 💫' },
+  { url: 'https://drive.google.com/file/d/19zhu2X31-4XyLnJr6_R7s-5OYeeGCZsj/view?usp=drivesdk', caption: 'Birthday Queen 👑' },
 ];
+
+function getDriveId(link) {
+  if (!link) return '';
+  const m = link.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return m[1];
+  const m2 = link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m2) return m2[1];
+  return '';
+}
 
 // Converts Google Drive share URL to direct image URL
 function getDriveUrl(link) {
   if (!link) return '';
-  const m = link.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
-  const m2 = link.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (m2) return `https://drive.google.com/uc?export=view&id=${m2[1]}`;
-  return link;
+  const id = getDriveId(link);
+  return id ? `https://lh3.googleusercontent.com/d/${id}` : link;
 }
 
 // ===== STATE =====
@@ -116,6 +122,14 @@ function replay() {
   cardsFlipped = 0;
   ageAnimDone = false;
 
+  // Clean up any dynamically spawned finale sparkles / fireworks / floating hearts
+  document.querySelectorAll('.finale-spark').forEach(s => s.remove());
+
+  // Hide any open lightboxes
+  const lb = document.getElementById('carousel-lightbox');
+  if (lb) lb.classList.add('hidden');
+  document.body.style.overflow = '';
+
   // Reset candles
   document.querySelectorAll('.candle').forEach(c => c.classList.remove('blown'));
 
@@ -137,7 +151,10 @@ function replay() {
   // Reset balloon/special phase visibility
   const specialPhase = document.getElementById('special-phase');
   const balloonPhase = document.getElementById('balloon-phase');
-  if (specialPhase) specialPhase.classList.add('hidden');
+  if (specialPhase) {
+    specialPhase.classList.add('hidden');
+    specialPhase.classList.remove('phase-visible');
+  }
   if (balloonPhase) { balloonPhase.style.display = ''; balloonPhase.style.opacity = '1'; }
 
   // Reset flip cards
@@ -148,14 +165,17 @@ function replay() {
   document.getElementById('letter-footer').classList.add('hidden');
   document.getElementById('letter-continue').classList.add('hidden');
 
-  // Reset envelope
+  // Reset envelope & welcome reveal on Page 1 completely
   const env = document.getElementById('envelope');
-  env.classList.remove('opened');
-  env.style.display = '';
-  env.style.opacity = '';
-  env.style.transform = '';
-  env.style.visibility = '';
-  document.getElementById('welcome-reveal').classList.add('hidden');
+  const welcomeReveal = document.getElementById('welcome-reveal');
+  if (env) {
+    env.className = 'envelope';
+    env.removeAttribute('style');
+  }
+  if (welcomeReveal) {
+    welcomeReveal.className = 'welcome-text hidden';
+    welcomeReveal.removeAttribute('style');
+  }
 
   // Reset cake
   document.getElementById('candle-counter').textContent = 'Tap the cake to blow all candles! 🌬️';
@@ -180,17 +200,22 @@ function onSlideEnter(n) {
 }
 
 
-// ===== SLIDE 1: ENVELOPE =====
 function openEnvelope() {
   const env = document.getElementById('envelope');
-  if (env.classList.contains('opened')) return;
+  if (!env || env.classList.contains('opened')) return;
   env.classList.add('opened');
   setTimeout(() => {
     env.style.transform = 'scale(0.9)';
     env.style.opacity = '0';
     setTimeout(() => {
       env.style.display = 'none';
-      document.getElementById('welcome-reveal').classList.remove('hidden');
+      const welcome = document.getElementById('welcome-reveal');
+      if (welcome) {
+        welcome.classList.remove('hidden');
+        welcome.style.animation = 'none';
+        void welcome.offsetHeight; // trigger reflow
+        welcome.style.animation = 'fadeInUp 0.8s ease';
+      }
       spawnConfettiBurst();
     }, 400);
   }, 500);
@@ -503,8 +528,17 @@ function initCarousel() {
       // Actual image (overlays placeholder when loaded)
       const img = document.createElement('img');
       img.alt = getCaption(i);
+      img.referrerPolicy = 'no-referrer';
+      const driveId = getDriveId(PHOTO_CONFIG[i]?.url);
       img.src = getPhotoUrl(i);
-      img.onerror = function() { this.style.display = 'none'; };
+      img.onerror = function() {
+        if (driveId && !this.dataset.triedFallback) {
+          this.dataset.triedFallback = 'true';
+          this.src = `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`;
+        } else {
+          this.style.display = 'none';
+        }
+      };
       photoWrap.appendChild(img);
 
       // Glossy sheen overlay
@@ -689,9 +723,18 @@ function openLightboxCarousel(idx) {
   const cap = document.getElementById('clb-caption');
   if (!lb || !img) return;
 
+  const driveId = getDriveId(PHOTO_CONFIG[idx]?.url);
   img.style.display = '';
+  img.referrerPolicy = 'no-referrer';
   img.src = getPhotoUrl(idx);
-  img.onerror = function() { this.style.display = 'none'; };
+  img.onerror = function() {
+    if (driveId && !this.dataset.triedFallback) {
+      this.dataset.triedFallback = 'true';
+      this.src = `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`;
+    } else {
+      this.style.display = 'none';
+    }
+  };
   cap.textContent = getCaption(idx);
   lb.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
@@ -713,12 +756,12 @@ function changeLightboxPhoto() {}
 
 // ===== SLIDE 6: LETTER — typewriter reveal =====
 const letterParagraphs = [
-  "Happy Birthday to someone who has always been special in her own unique way.",
-  "Your presence has always been larger than life. Your smile has a way of making everything around you feel brighter, your eyes sparkle like countless stars in the night sky, and your beauty is as gentle and peaceful as the moon. If angels walked among us, I think they'd look a little like you.",
-  "Life doesn't always unfold the way we hope, but some people continue to leave a beautiful mark on our hearts. No matter where life takes us, I sincerely wish you endless happiness, good health, success, and countless reasons to smile.",
-  "May this new chapter of your life be filled with laughter, exciting adventures, dreams coming true, and people who cherish you the way you deserve.",
-  "Keep shining like the stars.\nKeep glowing like the moon.\nKeep being the wonderful person you are.",
-  "Happy Birthday once again, Sravanii! 🌙✨"
+  "Happy Birthday to someone truly special ✨",
+  "Your smile lights up every room, and your kindness touches every heart around you. Your presence brings a warmth and beauty that is as gentle and graceful as the moonlight 🌙",
+  "No matter where life leads, I sincerely wish you endless happiness, great health, success, and countless reasons to smile every single day.",
+  "May this new chapter of your life be filled with exciting adventures, cherished memories, and all the love you so deeply deserve 🌸",
+  "Keep shining like the stars ⭐\nKeep glowing like the moon 🌙\nKeep being the wonderful person you are 💖",
+  "Happy Birthday once again, Sravanii! 🎉✨"
 ];
 
 let letterTimers = [];
@@ -745,7 +788,7 @@ function startLetter() {
       setTimeout(() => {
         footer.classList.remove('hidden');
         btn.classList.remove('hidden');
-        // Scroll to reveal footer inside paper
+        // Scroll to reveal footer inside paper smoothly
         if (paper) paper.scrollTo({ top: paper.scrollHeight, behavior: 'smooth' });
       }, 350);
       return;
@@ -757,9 +800,6 @@ function startLetter() {
     p.style.opacity   = '1';
     p.style.animation = 'none';
     body.appendChild(p);
-
-    // Scroll new paragraph into view
-    if (paper) paper.scrollTo({ top: paper.scrollHeight, behavior: 'smooth' });
 
     const cursor = document.createElement('span');
     cursor.className = 'cursor';
@@ -774,15 +814,15 @@ function startLetter() {
         if (ch === '\n') cursor.before(document.createElement('br'));
         else cursor.before(document.createTextNode(ch));
         cIdx++;
-        // Scroll every 12 chars to keep cursor visible
-        if (cIdx % 12 === 0 && paper) {
-          paper.scrollTo({ top: paper.scrollHeight, behavior: 'smooth' });
+        // Keep scroll at bottom if text grows past visible area
+        if (paper && (paper.scrollHeight - paper.scrollTop - paper.clientHeight > 15)) {
+          paper.scrollTop = paper.scrollHeight;
         }
-        const speed = (ch === ',' || ch === '.' || ch === '!' || ch === '?') ? 65 : 22;
+        const speed = (ch === ',' || ch === '.' || ch === '!' || ch === '?') ? 55 : 20;
         letterTimers.push(setTimeout(typeChar, speed));
       } else {
         cursor.remove();
-        letterTimers.push(setTimeout(() => typeParagraph(pIdx + 1), 420));
+        letterTimers.push(setTimeout(() => typeParagraph(pIdx + 1), 380));
       }
     }
     typeChar();
@@ -952,7 +992,7 @@ let _audio = null;
 
 function getAudio() {
   if (!_audio) {
-    _audio = new Audio('music/ReelAudio-3029.mp3.mpeg');
+    _audio = new Audio('music/ss.mpeg');
     _audio.loop   = true;
     _audio.volume = 0.5;
   }
