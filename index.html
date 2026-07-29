@@ -30,7 +30,7 @@
   <!-- ===== SLIDE 1: WELCOME ===== -->
   <div class="slide active" id="slide-1">
     <div class="slide-content entrance-slide">
-      <div class="envelope" id="envelope" onclick="openEnvelope()">
+      <div class="envelope" id="envelope" role="button" tabindex="0" aria-label="Open invitation">
         <div class="envelope-flap"></div>
         <div class="envelope-body">
           <div class="envelope-letter">
@@ -300,7 +300,7 @@
           "Some people make the world more beautiful just by being in it. You are one of them." 🌸
         </div>
         <div class="final-actions">
-          <button class="btn-magic" onclick="replay()">
+          <button class="btn-magic" id="replay-btn" type="button">
             <span>🔁 Replay</span>
           </button>
           <button class="btn-secondary" onclick="sharePage()">

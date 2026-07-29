@@ -44,8 +44,18 @@ let musicPlaying = false;
 let bgBalloonInterval = null;
 let confettiInterval = null;
 let ageAnimDone = false;
+let ageSpinInterval = null;
+let ageSpinTimer = null;
+let cakeTimers = [];
+let cakeBlowing = false;
+let balloonTimers = [];
+let flipContinueTimer = null;
+let carouselSeenTimer = null;
 let envelopeTimers = [];
-let envelopeLockedUntil = 0;
+let envelopeArmed = true;
+let finaleTimers = [];
+let fireworkInterval = null;
+let lastReplayAt = 0;
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
@@ -54,18 +64,57 @@ window.addEventListener('DOMContentLoaded', () => {
   startConfetti();
   showSlide(1);
   setupAutoMusic();
-  setupTouchHandlers();
+  setupEnvelopeInteraction();
+  setupReplayButton();
 });
 
-function setupTouchHandlers() {
+function setupEnvelopeInteraction() {
   const env = document.getElementById('envelope');
-  if (env) {
-    env.addEventListener('touchend', (e) => {
-      if (env.classList.contains('opened') || Date.now() < envelopeLockedUntil) return;
-      e.preventDefault();
-      openEnvelope();
-    }, { passive: false });
+  if (!env || env.dataset.bound === '1') return;
+  env.dataset.bound = '1';
+
+  env.removeAttribute('onclick');
+
+  const onActivate = (e) => {
+    if (!envelopeArmed || env.classList.contains('opened')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openEnvelope();
+  };
+
+  env.addEventListener('click', onActivate);
+  env.addEventListener('touchend', onActivate, { passive: false });
+  env.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') onActivate(e);
+  });
+}
+
+function setupReplayButton() {
+  const btn = document.getElementById('replay-btn');
+  if (!btn) return;
+
+  const onReplay = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const now = Date.now();
+    if (now - lastReplayAt < 500) return;
+    lastReplayAt = now;
+    replay();
+  };
+
+  // preventDefault on touchend stops the delayed ghost-click from landing on the envelope
+  btn.addEventListener('click', onReplay);
+  btn.addEventListener('touchend', onReplay, { passive: false });
+}
+
+function clearFinaleEffects() {
+  if (fireworkInterval) {
+    clearInterval(fireworkInterval);
+    fireworkInterval = null;
   }
+  finaleTimers.forEach(t => clearTimeout(t));
+  finaleTimers = [];
+  document.querySelectorAll('.finale-spark').forEach(s => s.remove());
 }
 
 // Auto-start music on first interaction
@@ -74,11 +123,17 @@ function setupAutoMusic() {
   const tryStart = () => {
     if (started || musicPlaying) return;
     started = true;
-    startMusic();
-    showMusicToast();
+    startMusic({
+      onSuccess: () => {
+        showMusicToast();
+        document.removeEventListener('touchend', tryStart);
+        document.removeEventListener('click', tryStart);
+      },
+      onFail: () => { started = false; }
+    });
   };
-  document.addEventListener('touchend', tryStart, { once: true, passive: true });
-  document.addEventListener('click',    tryStart, { once: true });
+  document.addEventListener('touchend', tryStart, { passive: true });
+  document.addEventListener('click', tryStart);
 }
 
 function showMusicToast() {
@@ -99,20 +154,68 @@ function showMusicToast() {
 }
 
 
+function clearAgeTimers() {
+  if (ageSpinInterval) { clearInterval(ageSpinInterval); ageSpinInterval = null; }
+  if (ageSpinTimer) { clearTimeout(ageSpinTimer); ageSpinTimer = null; }
+  const t = document.getElementById('digit-tens');
+  const o = document.getElementById('digit-ones');
+  if (t) t.classList.remove('spinning');
+  if (o) o.classList.remove('spinning');
+}
+
+function clearCakeTimers() {
+  cakeTimers.forEach(t => clearTimeout(t));
+  cakeTimers = [];
+  cakeBlowing = false;
+}
+
+function clearBalloonTimers() {
+  balloonTimers.forEach(t => clearTimeout(t));
+  balloonTimers = [];
+  if (flipContinueTimer) { clearTimeout(flipContinueTimer); flipContinueTimer = null; }
+}
+
+function clearCarouselSeenTimer() {
+  if (carouselSeenTimer) { clearTimeout(carouselSeenTimer); carouselSeenTimer = null; }
+}
+
+function closeLightboxIfOpen() {
+  const lb = document.getElementById('carousel-lightbox');
+  if (lb) lb.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
 // ===== SLIDE NAVIGATION =====
 function showSlide(n) {
-  // Stop carousel auto-rotate when leaving slide 5 (bug fix)
-  if (currentSlide === 5 && n !== 5) stopCarouselAuto();
+  const prev = currentSlide;
+
+  // Clean up slide-specific timers/effects when leaving
+  if (prev === 2 && n !== 2) clearAgeTimers();
+  if (prev === 3 && n !== 3) clearCakeTimers();
+  if (prev === 4 && n !== 4) {
+    clearBalloonTimers();
+    if (specialMsgTimer) { clearTimeout(specialMsgTimer); specialMsgTimer = null; }
+  }
+  if (prev === 5 && n !== 5) {
+    stopCarouselAuto();
+    clearCarouselSeenTimer();
+    closeLightboxIfOpen();
+  }
+  if (prev === 6 && n !== 6) {
+    letterTimers.forEach(t => clearTimeout(t));
+    letterTimers = [];
+  }
+  if (prev === 7 && n !== 7) clearFinaleEffects();
 
   document.querySelectorAll('.slide').forEach(s => s.classList.remove('active', 'exit'));
   document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i + 1 === n));
 
+  currentSlide = n;
   const slide = document.getElementById(`slide-${n}`);
   if (slide) {
     slide.classList.add('active');
     onSlideEnter(n);
   }
-  currentSlide = n;
 }
 
 function nextSlide() {
@@ -128,31 +231,58 @@ function clearEnvelopeTimers() {
   envelopeTimers = [];
 }
 
+function resetEnvelopeUI() {
+  clearEnvelopeTimers();
+  envelopeArmed = false;
+
+  const oldEnv = document.getElementById('envelope');
+  const welcomeReveal = document.getElementById('welcome-reveal');
+
+  // Clone to drop any stuck opened/animation state and rebind listeners cleanly
+  if (oldEnv && oldEnv.parentNode) {
+    const fresh = oldEnv.cloneNode(true);
+    fresh.id = 'envelope';
+    fresh.className = 'envelope';
+    fresh.removeAttribute('style');
+    fresh.removeAttribute('data-bound');
+    fresh.removeAttribute('onclick');
+    oldEnv.parentNode.replaceChild(fresh, oldEnv);
+    setupEnvelopeInteraction();
+  }
+
+  if (welcomeReveal) {
+    welcomeReveal.className = 'welcome-text hidden';
+    welcomeReveal.removeAttribute('style');
+  }
+
+  // Brief disarm so the Replay tap's leftover click cannot open the fresh envelope
+  envelopeTimers.push(setTimeout(() => {
+    envelopeArmed = true;
+  }, 350));
+}
+
 function replay() {
   // Stop all running timers
   stopCarouselAuto();
   clearEnvelopeTimers();
+  clearFinaleEffects();
+  clearAgeTimers();
+  clearCakeTimers();
+  clearBalloonTimers();
+  clearCarouselSeenTimer();
+  closeLightboxIfOpen();
   if (specialMsgTimer) { clearTimeout(specialMsgTimer); specialMsgTimer = null; }
   letterTimers.forEach(t => clearTimeout(t));
   letterTimers = [];
-
-  // Ignore envelope taps briefly so the same Replay tap/ghost click cannot open it
-  envelopeLockedUntil = Date.now() + 450;
 
   currentSlide = 1;
   candlesBlown = 0;
   balloonsPopped = 0;
   cardsFlipped = 0;
   ageAnimDone = false;
+  cakeBlowing = false;
 
-  // Clean up any dynamically spawned finale sparkles / fireworks / floating hearts
-  document.querySelectorAll('.finale-spark').forEach(s => s.remove());
-
-  // Hide any open lightboxes
-  const lb = document.getElementById('carousel-lightbox');
-  if (lb) lb.classList.add('hidden');
-  document.body.style.overflow = '';
-
+  // Hide any open lightboxes (also handled by closeLightboxIfOpen above)
   // Reset continue buttons on all slides
   ['age-continue', 'cake-continue', 'balloon-continue', 'gallery-continue', 'letter-continue'].forEach(id => {
     const btn = document.getElementById(id);
@@ -193,20 +323,19 @@ function replay() {
   document.getElementById('letter-footer').classList.add('hidden');
 
   // Reset envelope & welcome reveal on Page 1 completely to pristine unopened state
-  const env = document.getElementById('envelope');
-  const welcomeReveal = document.getElementById('welcome-reveal');
-  if (env) {
-    env.className = 'envelope';
-    env.removeAttribute('style');
-  }
-  if (welcomeReveal) {
-    welcomeReveal.className = 'welcome-text hidden';
-    welcomeReveal.removeAttribute('style');
-  }
+  resetEnvelopeUI();
 
   // Reset cake
   document.getElementById('candle-counter').textContent = 'Tap the cake to blow all candles! 🌬️';
   document.getElementById('wish-bubble').classList.add('hidden');
+
+  // Reset age digits for a clean replay
+  const digitTens = document.getElementById('digit-tens');
+  const digitOnes = document.getElementById('digit-ones');
+  const ageDesc = document.getElementById('age-desc');
+  if (digitTens) { digitTens.textContent = '2'; digitTens.style.color = ''; digitTens.classList.remove('spinning'); }
+  if (digitOnes) { digitOnes.textContent = '2'; digitOnes.style.color = ''; digitOnes.classList.remove('spinning'); }
+  if (ageDesc) { ageDesc.textContent = ''; ageDesc.style.animation = ''; }
 
   // Reset carousel index
   carouselIndex = 0;
@@ -229,8 +358,7 @@ function onSlideEnter(n) {
 // ===== SLIDE 1: ENVELOPE =====
 function openEnvelope() {
   const env = document.getElementById('envelope');
-  if (!env || env.classList.contains('opened')) return;
-  if (Date.now() < envelopeLockedUntil) return;
+  if (!env || env.classList.contains('opened') || !envelopeArmed) return;
 
   clearEnvelopeTimers();
   env.classList.add('opened');
@@ -257,7 +385,9 @@ function openEnvelope() {
 
 // ===== SLIDE 2: AGE COUNTER =====
 function startAgeCounter() {
-  ageAnimDone = true;
+  if (ageAnimDone) return;
+  clearAgeTimers();
+
   const desc = document.getElementById('age-desc');
   const t    = document.getElementById('digit-tens');
   const o    = document.getElementById('digit-ones');
@@ -269,19 +399,23 @@ function startAgeCounter() {
 
   const digits = ['0','1','2','3','4','5','6','7','8','9'];
   let count = 0;
-  const spinInterval = setInterval(() => {
+  ageSpinInterval = setInterval(() => {
     t.textContent = digits[Math.floor(Math.random() * 10)];
     o.textContent = digits[Math.floor(Math.random() * 10)];
     count++;
     if (count > 20) {
-      clearInterval(spinInterval);
+      clearInterval(ageSpinInterval);
+      ageSpinInterval = null;
       t.classList.remove('spinning');
       o.classList.remove('spinning');
       t.textContent = '2';
       o.textContent = '2';
       t.style.color = '#ff6b9d';
       o.style.color = '#ff6b9d';
-      setTimeout(() => {
+      ageSpinTimer = setTimeout(() => {
+        ageSpinTimer = null;
+        if (currentSlide !== 2) return;
+        ageAnimDone = true;
         desc.textContent = '22 beautiful years of being YOU! 🌸';
         desc.style.animation = 'fadeInUp 0.5s ease';
         btn.classList.remove('hidden');
@@ -294,37 +428,47 @@ function startAgeCounter() {
 
 // ===== SLIDE 3: CAKE =====
 function resetCakeSlide() {
+  clearCakeTimers();
   document.getElementById('wish-bubble').classList.add('hidden');
   document.getElementById('cake-continue').classList.add('hidden');
   document.getElementById('candle-counter').textContent = 'Tap the cake to blow all candles! 🌬️';
   document.querySelectorAll('.candle').forEach(c => c.classList.remove('blown'));
   candlesBlown = 0;
+  cakeBlowing = false;
 }
 
 function blowAllCandles() {
   const candles = document.querySelectorAll('.candle');
   let alreadyAllBlown = true;
   candles.forEach(c => { if (!c.classList.contains('blown')) alreadyAllBlown = false; });
-  if (alreadyAllBlown) return;
+  if (alreadyAllBlown || cakeBlowing) return;
+  cakeBlowing = true;
 
   candles.forEach((candle, i) => {
-    setTimeout(() => {
+    cakeTimers.push(setTimeout(() => {
+      if (currentSlide !== 3) return;
       if (!candle.classList.contains('blown')) {
         candle.classList.add('blown');
         createParticleBurst(candle, '#ffd700');
       }
-    }, i * 100);
+    }, i * 100));
   });
 
   document.getElementById('candle-counter').textContent = 'All candles blown! Your wish is granted! ⭐';
   document.getElementById('cake').classList.add('shake');
-  setTimeout(() => document.getElementById('cake').classList.remove('shake'), 500);
+  cakeTimers.push(setTimeout(() => {
+    const cake = document.getElementById('cake');
+    if (cake) cake.classList.remove('shake');
+  }, 500));
 
-  setTimeout(() => {
+  cakeTimers.push(setTimeout(() => {
+    if (currentSlide !== 3) return;
+    candlesBlown = totalCandles;
+    cakeBlowing = false;
     document.getElementById('wish-bubble').classList.remove('hidden');
     document.getElementById('cake-continue').classList.remove('hidden');
     spawnConfettiBurst();
-  }, 700);
+  }, 700));
 }
 
 function blowCandle() { blowAllCandles(); }
@@ -359,6 +503,8 @@ function createParticleBurst(el, color) {
 // ===== SLIDE 4: BALLOON POP + WHY YOU'RE SO SPECIAL (MERGED) =====
 
 function resetBalloonSpecial() {
+  clearBalloonTimers();
+  if (specialMsgTimer) { clearTimeout(specialMsgTimer); specialMsgTimer = null; }
   balloonsPopped = 0;
   cardsFlipped = 0;
   document.getElementById('popped-count').textContent = '0';
@@ -418,24 +564,30 @@ function popBalloon(balloon) {
 
   if (balloonsPopped === totalBalloons) {
     // Show sub-message + confetti
-    setTimeout(() => {
+    balloonTimers.push(setTimeout(() => {
+      if (currentSlide !== 4) return;
       const revSub = document.getElementById('reveal-sub');
       if (revSub) revSub.classList.remove('hidden');
       spawnConfettiBurst();
-    }, 400);
+    }, 400));
 
     // Transition to special phase after 1.5s
-    setTimeout(() => {
+    balloonTimers.push(setTimeout(() => {
+      if (currentSlide !== 4) return;
       const balloonPhase = document.getElementById('balloon-phase');
       const specialPhase  = document.getElementById('special-phase');
 
       if (balloonPhase) {
         balloonPhase.style.transition = 'opacity 0.4s ease';
         balloonPhase.style.opacity = '0';
-        setTimeout(() => { balloonPhase.style.display = 'none'; }, 420);
+        balloonTimers.push(setTimeout(() => {
+          if (currentSlide !== 4) return;
+          balloonPhase.style.display = 'none';
+        }, 420));
       }
 
-      setTimeout(() => {
+      balloonTimers.push(setTimeout(() => {
+        if (currentSlide !== 4) return;
         if (specialPhase) {
           // Remove hidden + add phase-visible to trigger CSS animation
           specialPhase.classList.remove('hidden');
@@ -446,8 +598,8 @@ function popBalloon(balloon) {
         const slideContent = document.querySelector('.balloon-special-slide');
         if (slideContent) slideContent.scrollTop = 0;
         startSpecialMsg();
-      }, 440);
-    }, 1500);
+      }, 440));
+    }, 1500));
   }
 }
 
@@ -463,7 +615,10 @@ function flipCard(card) {
   cardsFlipped++;
   // Show continue after 3 cards flipped
   if (cardsFlipped >= 3) {
-    setTimeout(() => {
+    if (flipContinueTimer) clearTimeout(flipContinueTimer);
+    flipContinueTimer = setTimeout(() => {
+      flipContinueTimer = null;
+      if (currentSlide !== 4 || cardsFlipped < 3) return;
       document.getElementById('balloon-continue').classList.remove('hidden');
     }, 600);
   }
@@ -493,7 +648,10 @@ function startSpecialMsg() {
       i++;
       specialMsgTimer = setTimeout(typeNext, 26);
     } else {
-      setTimeout(() => { if (cursor.parentNode) cursor.remove(); }, 1500);
+      specialMsgTimer = setTimeout(() => {
+        specialMsgTimer = null;
+        if (cursor.parentNode) cursor.remove();
+      }, 1500);
     }
   }
   typeNext();
@@ -617,6 +775,7 @@ function initCarousel() {
   }
 
   carouselIndex = 0;
+  clearCarouselSeenTimer();
   renderCarousel();
   startCarouselAuto();
 
@@ -665,10 +824,12 @@ function renderCarousel() {
   const caption = document.getElementById('carousel-caption');
   const counter = document.getElementById('carousel-counter');
   if (caption) {
+    const shownIndex = carouselIndex;
     caption.style.opacity = '0';
     setTimeout(() => {
-      caption.textContent = getCaption(carouselIndex);
-      counter.textContent = `${carouselIndex + 1} / ${TOTAL_PHOTOS}`;
+      if (currentSlide !== 5 || carouselIndex !== shownIndex) return;
+      caption.textContent = getCaption(shownIndex);
+      if (counter) counter.textContent = `${shownIndex + 1} / ${TOTAL_PHOTOS}`;
       caption.style.opacity = '1';
     }, 150);
   }
@@ -683,7 +844,10 @@ function renderCarousel() {
     const hint = document.getElementById('carousel-hint');
     const btn  = document.getElementById('gallery-continue');
     if (hint && hint.textContent !== '✨ You\'ve seen them all!') {
-      setTimeout(() => {
+      clearCarouselSeenTimer();
+      carouselSeenTimer = setTimeout(() => {
+        carouselSeenTimer = null;
+        if (currentSlide !== 5 || carouselIndex !== TOTAL_PHOTOS - 1) return;
         hint.textContent = '✨ You\'ve seen them all!';
         btn.classList.remove('hidden');
         spawnConfettiBurst();
@@ -728,7 +892,7 @@ function setupCarouselDrag(stage) {
     const dx = e.changedTouches[0].clientX - startX;
     if (Math.abs(dx) > 30) dx < 0 ? carouselNext() : carouselPrev();
     carouselDragging = false;
-    startCarouselAuto();
+    if (currentSlide === 5) startCarouselAuto();
   }, { passive: true });
 
   // Mouse drag — only on stage, cleanup on window
@@ -744,7 +908,7 @@ function setupCarouselDrag(stage) {
     const dx = e.clientX - startX;
     if (Math.abs(dx) > 30) dx < 0 ? carouselNext() : carouselPrev();
     carouselDragging = false;
-    startCarouselAuto();
+    if (currentSlide === 5) startCarouselAuto();
   };
   window.addEventListener('mouseup', onMouseUp);
 }
@@ -759,6 +923,7 @@ function openLightboxCarousel(idx) {
   const driveId = getDriveId(PHOTO_CONFIG[idx]?.url);
   img.style.display = '';
   img.referrerPolicy = 'no-referrer';
+  delete img.dataset.triedFallback;
   img.src = getPhotoUrl(idx);
   img.onerror = function() {
     if (driveId && !this.dataset.triedFallback) {
@@ -778,7 +943,7 @@ function closeLightboxCarousel(e) {
   if (e.target !== e.currentTarget && !e.target.classList.contains('clb-close')) return;
   document.getElementById('carousel-lightbox').classList.add('hidden');
   document.body.style.overflow = '';
-  startCarouselAuto();
+  if (currentSlide === 5) startCarouselAuto();
 }
 
 // Legacy no-ops
@@ -818,12 +983,13 @@ function startLetter() {
   // ── Type paragraphs ONE AT A TIME — no blank-space flicker ──
   function typeParagraph(pIdx) {
     if (pIdx >= letterParagraphs.length) {
-      setTimeout(() => {
+      letterTimers.push(setTimeout(() => {
+        if (currentSlide !== 6) return;
         footer.classList.remove('hidden');
         btn.classList.remove('hidden');
         // Scroll to reveal footer inside paper smoothly
         if (paper) paper.scrollTo({ top: paper.scrollHeight, behavior: 'smooth' });
-      }, 350);
+      }, 350));
       return;
     }
 
@@ -867,18 +1033,19 @@ function startLetter() {
 
 // ===== SLIDE 7: GRAND FINALE =====
 function launchGrandFinale() {
+  clearFinaleEffects();
   launchFireworks();
   launchHeartBurst();
   spawnConfettiBurst();
-  setTimeout(spawnConfettiBurst, 600);
-  setTimeout(spawnConfettiBurst, 1300);
+  finaleTimers.push(setTimeout(spawnConfettiBurst, 600));
+  finaleTimers.push(setTimeout(spawnConfettiBurst, 1300));
   launchFinaleSparkles();
 }
 
 function launchFinaleSparkles() {
   const sparkles = ['✨','⭐','🌟','💫','🎇','🎆','💥'];
   for (let i = 0; i < 28; i++) {
-    setTimeout(() => {
+    finaleTimers.push(setTimeout(() => {
       const s = document.createElement('div');
       s.className = 'finale-spark';
       s.textContent = sparkles[Math.floor(Math.random() * sparkles.length)];
@@ -888,14 +1055,18 @@ function launchFinaleSparkles() {
       s.style.animationDelay = `${Math.random() * 0.4}s`;
       document.body.appendChild(s);
       setTimeout(() => s.remove(), 4200);
-    }, i * 110);
+    }, i * 110));
   }
 }
 
 function launchFireworks() {
   let fw = 0;
-  const interval = setInterval(() => {
-    if (fw++ > 20) { clearInterval(interval); return; }
+  fireworkInterval = setInterval(() => {
+    if (fw++ > 20) {
+      clearInterval(fireworkInterval);
+      fireworkInterval = null;
+      return;
+    }
     createFirework();
   }, 200);
 }
@@ -932,8 +1103,9 @@ function launchHeartBurst() {
   spawnConfettiBurst();
   const hearts = ['💖','💗','💕','💓','❤️','🌸','✨','⭐'];
   for (let i = 0; i < 28; i++) {
-    setTimeout(() => {
+    finaleTimers.push(setTimeout(() => {
       const h = document.createElement('div');
+      h.className = 'finale-spark';
       h.textContent = hearts[Math.floor(Math.random() * hearts.length)];
       h.style.cssText = `
         position:fixed;
@@ -945,7 +1117,7 @@ function launchHeartBurst() {
       `;
       document.body.appendChild(h);
       setTimeout(() => h.remove(), 3300);
-    }, i * 120);
+    }, i * 120));
   }
 }
 
@@ -1036,7 +1208,8 @@ function toggleMusic() {
   musicPlaying ? stopMusic() : startMusic();
 }
 
-function startMusic() {
+function startMusic(opts = {}) {
+  const { onSuccess, onFail } = opts;
   try {
     const audio = getAudio();
     const p = audio.play();
@@ -1045,13 +1218,21 @@ function startMusic() {
         musicPlaying = true;
         document.getElementById('music-btn').classList.add('playing');
         document.getElementById('music-icon').textContent = '🎶';
-      }).catch(e => console.log('Audio blocked:', e));
+        if (onSuccess) onSuccess();
+      }).catch(e => {
+        console.log('Audio blocked:', e);
+        if (onFail) onFail();
+      });
     } else {
       musicPlaying = true;
       document.getElementById('music-btn').classList.add('playing');
       document.getElementById('music-icon').textContent = '🎶';
+      if (onSuccess) onSuccess();
     }
-  } catch(e) { console.log('Audio error:', e); }
+  } catch(e) {
+    console.log('Audio error:', e);
+    if (onFail) onFail();
+  }
 }
 
 function stopMusic() {
@@ -1116,19 +1297,24 @@ function showShareToast(msg) {
 
 // ===== KEYBOARD NAVIGATION =====
 document.addEventListener('keydown', e => {
+  const lb = document.getElementById('carousel-lightbox');
+  const lightboxOpen = lb && !lb.classList.contains('hidden');
+
+  if (e.key === 'Escape' && lightboxOpen) {
+    lb.classList.add('hidden');
+    document.body.style.overflow = '';
+    if (currentSlide === 5) startCarouselAuto();
+    return;
+  }
+
+  // Don't change slides while lightbox is open
+  if (lightboxOpen) return;
+
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
     if (currentSlide < totalSlides) showSlide(currentSlide + 1);
   }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
     if (currentSlide > 1) showSlide(currentSlide - 1);
-  }
-  if (e.key === 'Escape') {
-    const lb = document.getElementById('carousel-lightbox');
-    if (lb && !lb.classList.contains('hidden')) {
-      lb.classList.add('hidden');
-      document.body.style.overflow = '';
-      startCarouselAuto();
-    }
   }
 });
 
