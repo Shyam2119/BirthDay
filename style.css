@@ -3,8 +3,6 @@
    style.css
 =========================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Poppins:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
-
 /* ---- RESET & ROOT ---- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -69,7 +67,9 @@ body::before {
 
 /* ---- MUSIC PLAYER ---- */
 #music-player {
-  position: fixed; top: 16px; right: 16px;
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
   z-index: 1000;
 }
 #music-btn {
@@ -88,6 +88,7 @@ body::before {
   background: rgba(255,107,157,0.4);
   transform: scale(1.1);
 }
+#music-btn:active { transform: scale(0.92); }
 #music-btn.playing { animation: pulse-music 2s infinite; }
 @keyframes pulse-music {
   0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,157,0.4); }
@@ -96,18 +97,25 @@ body::before {
 
 /* ---- PROGRESS DOTS ---- */
 #progress-dots {
-  position: fixed; bottom: 20px; left: 50%;
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 50%;
   transform: translateX(-50%);
   display: flex; gap: 8px;
   z-index: 100;
 }
 .dot {
   width: 10px; height: 10px;
+  padding: 0;
+  border: none;
   border-radius: 50%;
   background: rgba(255,255,255,0.3);
   cursor: pointer;
   transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
 }
+.dot:active { transform: scale(0.85); }
 .dot.active {
   background: var(--pink);
   transform: scale(1.3);
@@ -187,8 +195,15 @@ body::before {
 }
 .btn-magic:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 12px 40px rgba(255,107,157,0.6); }
 .btn-magic:hover::before { opacity: 1; }
-.btn-magic:active { transform: scale(0.97); }
+.btn-magic:active { transform: scale(0.95); }
 .btn-magic span { position: relative; z-index: 1; }
+.btn-magic.btn-enter {
+  animation: btnEnter 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes btnEnter {
+  from { opacity: 0; transform: translateY(14px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .btn-secondary {
   background: rgba(255,255,255,0.1);
@@ -204,6 +219,7 @@ body::before {
   margin-top: 12px;
 }
 .btn-secondary:hover { background: rgba(255,255,255,0.2); transform: translateY(-3px); }
+.btn-secondary:active { transform: scale(0.95); }
 
 /* =====================
    SLIDE 1: ENTRANCE
@@ -215,10 +231,17 @@ body::before {
   width: 280px; height: 200px;
   position: relative;
   cursor: pointer;
-  transition: transform 0.5s ease;
+  transition: transform 0.35s ease;
   filter: drop-shadow(0 20px 40px rgba(255,107,157,0.5));
+  outline: none;
 }
-.envelope:hover { transform: scale(1.05) translateY(-5px); }
+@media (hover: hover) {
+  .envelope:hover { transform: scale(1.05) translateY(-5px); }
+}
+.envelope:active { transform: scale(0.96); }
+.envelope:focus-visible {
+  filter: drop-shadow(0 20px 40px rgba(255,107,157,0.5)) drop-shadow(0 0 0 3px rgba(255,215,0,0.7));
+}
 .envelope-body {
   position: absolute; inset: 40px 0 0;
   background: linear-gradient(145deg, #ff9ac7, #ff6b9d);
@@ -333,6 +356,17 @@ body::before {
 .slot-digit.spinning {
   animation: slot-spin 0.1s steps(1) infinite;
 }
+.slot-digit.locked-in {
+  color: #ff6b9d;
+  animation: digitLockIn 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 40px rgba(255,107,157,0.55), inset 0 0 20px rgba(255,255,255,0.05);
+}
+@keyframes digitLockIn {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.12); }
+  70%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
 @keyframes slot-spin {
   0% { color: #ff6b9d; }
   25% { color: #c77dff; }
@@ -363,6 +397,7 @@ body::before {
   filter: drop-shadow(0 20px 40px rgba(255,107,157,0.4));
   transition: transform 0.3s ease;
 }
+.cake:active { transform: scale(0.97); }
 .cake.shake {
   animation: cake-shake 0.5s ease;
 }
@@ -500,9 +535,13 @@ body::before {
   cursor: pointer;
   animation: balloon-float 2.5s ease-in-out infinite alternate;
   animation-delay: var(--delay);
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.game-balloon:hover { transform: scale(1.1); }
+@media (hover: hover) {
+  .game-balloon:hover { transform: scale(1.1); }
+}
+.game-balloon:active { transform: scale(0.9); }
 @keyframes balloon-float {
   0% { transform: translateY(0) rotate(-3deg); }
   100% { transform: translateY(-18px) rotate(3deg); }
@@ -629,7 +668,9 @@ body::before {
   height: 110px;
   perspective: 1000px;
   cursor: pointer;
+  transition: transform 0.2s ease;
 }
+.flip-card:active { transform: scale(0.96); }
 .flip-card-inner {
   position: relative; width: 100%; height: 100%;
   transform-style: preserve-3d;
@@ -1273,13 +1314,22 @@ body::before {
   }
   .slide-content::-webkit-scrollbar { display: none; }
 
-  /* Progress dots */
-  #progress-dots { bottom: 10px; gap: 6px; }
-  .dot { width: 8px; height: 8px; }
+  /* Progress dots — larger tap targets + safe area */
+  #progress-dots {
+    bottom: max(10px, env(safe-area-inset-bottom));
+    gap: 4px;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    margin: 10px 6px;
+  }
 
   /* Music btn */
   #music-btn { width: 40px; height: 40px; font-size: 18px; }
-  #music-player { top: 10px; right: 10px; }
+  #music-player {
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+  }
 
   /* Slide titles */
   .slide-title { font-size: clamp(1.5rem, 6vw, 2rem); margin-bottom: 6px; }
@@ -1366,4 +1416,14 @@ body::before {
   .c-card { width: 150px; height: 215px; padding: 5px 5px 36px; }
   .carousel-stage { height: 300px; }
   .carousel-track { width: 150px; height: 218px; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .star, .bg-balloon, .confetti-piece { display: none !important; }
 }

@@ -59,14 +59,55 @@ let lastReplayAt = 0;
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
-  createStars();
-  createBgBalloons();
-  startConfetti();
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  createStars(reduceMotion ? 12 : 28);
+  if (!reduceMotion) {
+    // Delay ambient effects so first paint stays snappy
+    setTimeout(() => {
+      createBgBalloons();
+      startConfetti();
+    }, 900);
+  }
   showSlide(1);
   setupAutoMusic();
   setupEnvelopeInteraction();
   setupReplayButton();
+  prefetchPhotos();
+  setupVisibilityPause();
 });
+
+function prefetchPhotos() {
+  PHOTO_CONFIG.forEach((_, i) => {
+    const img = new Image();
+    img.referrerPolicy = 'no-referrer';
+    img.src = getPhotoUrl(i);
+  });
+}
+
+function setupVisibilityPause() {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (confettiInterval) { clearInterval(confettiInterval); confettiInterval = null; }
+      if (bgBalloonInterval) { clearInterval(bgBalloonInterval); bgBalloonInterval = null; }
+      stopCarouselAuto();
+    } else {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (!confettiInterval) startConfetti();
+        if (!bgBalloonInterval) createBgBalloons();
+      }
+      if (currentSlide === 5) startCarouselAuto();
+    }
+  });
+}
+
+function revealContinueBtn(id) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  btn.classList.remove('hidden');
+  btn.classList.remove('btn-enter');
+  void btn.offsetHeight;
+  btn.classList.add('btn-enter');
+}
 
 function setupEnvelopeInteraction() {
   const env = document.getElementById('envelope');
@@ -208,7 +249,12 @@ function showSlide(n) {
   if (prev === 7 && n !== 7) clearFinaleEffects();
 
   document.querySelectorAll('.slide').forEach(s => s.classList.remove('active', 'exit'));
-  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i + 1 === n));
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    const on = i + 1 === n;
+    d.classList.toggle('active', on);
+    if (on) d.setAttribute('aria-current', 'true');
+    else d.removeAttribute('aria-current');
+  });
 
   currentSlide = n;
   const slide = document.getElementById(`slide-${n}`);
@@ -333,8 +379,8 @@ function replay() {
   const digitTens = document.getElementById('digit-tens');
   const digitOnes = document.getElementById('digit-ones');
   const ageDesc = document.getElementById('age-desc');
-  if (digitTens) { digitTens.textContent = '2'; digitTens.style.color = ''; digitTens.classList.remove('spinning'); }
-  if (digitOnes) { digitOnes.textContent = '2'; digitOnes.style.color = ''; digitOnes.classList.remove('spinning'); }
+  if (digitTens) { digitTens.textContent = '2'; digitTens.style.color = ''; digitTens.classList.remove('spinning', 'locked-in'); }
+  if (digitOnes) { digitOnes.textContent = '2'; digitOnes.style.color = ''; digitOnes.classList.remove('spinning', 'locked-in'); }
   if (ageDesc) { ageDesc.textContent = ''; ageDesc.style.animation = ''; }
 
   // Reset carousel index
@@ -391,10 +437,11 @@ function startAgeCounter() {
   const desc = document.getElementById('age-desc');
   const t    = document.getElementById('digit-tens');
   const o    = document.getElementById('digit-ones');
-  const btn  = document.getElementById('age-continue');
 
   t.classList.add('spinning');
   o.classList.add('spinning');
+  t.classList.remove('locked-in');
+  o.classList.remove('locked-in');
   desc.textContent = '';
 
   const digits = ['0','1','2','3','4','5','6','7','8','9'];
@@ -410,15 +457,15 @@ function startAgeCounter() {
       o.classList.remove('spinning');
       t.textContent = '2';
       o.textContent = '2';
-      t.style.color = '#ff6b9d';
-      o.style.color = '#ff6b9d';
+      t.classList.add('locked-in');
+      o.classList.add('locked-in');
       ageSpinTimer = setTimeout(() => {
         ageSpinTimer = null;
         if (currentSlide !== 2) return;
         ageAnimDone = true;
         desc.textContent = '22 beautiful years of being YOU! 🌸';
         desc.style.animation = 'fadeInUp 0.5s ease';
-        btn.classList.remove('hidden');
+        revealContinueBtn('age-continue');
         spawnConfettiBurst();
       }, 300);
     }
@@ -466,7 +513,7 @@ function blowAllCandles() {
     candlesBlown = totalCandles;
     cakeBlowing = false;
     document.getElementById('wish-bubble').classList.remove('hidden');
-    document.getElementById('cake-continue').classList.remove('hidden');
+    revealContinueBtn('cake-continue');
     spawnConfettiBurst();
   }, 700));
 }
@@ -619,7 +666,8 @@ function flipCard(card) {
     flipContinueTimer = setTimeout(() => {
       flipContinueTimer = null;
       if (currentSlide !== 4 || cardsFlipped < 3) return;
-      document.getElementById('balloon-continue').classList.remove('hidden');
+      revealContinueBtn('balloon-continue');
+      spawnConfettiBurst();
     }, 600);
   }
 }
@@ -842,14 +890,13 @@ function renderCarousel() {
   // "All seen" — show once when user reaches last photo
   if (activeIsLast) {
     const hint = document.getElementById('carousel-hint');
-    const btn  = document.getElementById('gallery-continue');
     if (hint && hint.textContent !== '✨ You\'ve seen them all!') {
       clearCarouselSeenTimer();
       carouselSeenTimer = setTimeout(() => {
         carouselSeenTimer = null;
         if (currentSlide !== 5 || carouselIndex !== TOTAL_PHOTOS - 1) return;
         hint.textContent = '✨ You\'ve seen them all!';
-        btn.classList.remove('hidden');
+        revealContinueBtn('gallery-continue');
         spawnConfettiBurst();
       }, 500);
     }
@@ -875,7 +922,7 @@ function startCarouselAuto() {
   stopCarouselAuto();
   carouselAutoTimer = setInterval(() => {
     if (!carouselDragging) carouselNext();
-  }, 3500);
+  }, 4500);
 }
 
 function setupCarouselDrag(stage) {
@@ -975,6 +1022,7 @@ function startLetter() {
   body.innerHTML = '';
   footer.classList.add('hidden');
   btn.classList.add('hidden');
+  btn.classList.remove('btn-enter');
 
   // Scroll letter-paper (now scrollable) to top
   const paper = document.querySelector('.letter-paper');
@@ -986,7 +1034,7 @@ function startLetter() {
       letterTimers.push(setTimeout(() => {
         if (currentSlide !== 6) return;
         footer.classList.remove('hidden');
-        btn.classList.remove('hidden');
+        revealContinueBtn('letter-continue');
         // Scroll to reveal footer inside paper smoothly
         if (paper) paper.scrollTo({ top: paper.scrollHeight, behavior: 'smooth' });
       }, 350));
@@ -1124,8 +1172,10 @@ function launchHeartBurst() {
 
 // ===== CONFETTI BURST =====
 function spawnConfettiBurst() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const colors = ['#ff6b9d','#ffd700','#c77dff','#4d96ff','#6bcb77','#ff9a00','#fff'];
-  for (let i = 0; i < 45; i++) {
+  const count = window.innerWidth < 480 ? 24 : 45;
+  for (let i = 0; i < count; i++) {
     const c = document.createElement('div');
     c.className = 'confetti-piece';
     c.style.left = `${5 + Math.random() * 90}vw`;
@@ -1142,9 +1192,10 @@ function spawnConfettiBurst() {
 
 // Background confetti (continuous)
 function startConfetti() {
+  if (confettiInterval) return;
   const colors = ['#ff6b9d','#ffd700','#c77dff','#4d96ff','#6bcb77','#ff9a00'];
   confettiInterval = setInterval(() => {
-    if (Math.random() > 0.6) return;
+    if (document.hidden || Math.random() > 0.55) return;
     const c = document.createElement('div');
     c.className = 'confetti-piece';
     c.style.left = `${Math.random() * 100}vw`;
@@ -1155,13 +1206,15 @@ function startConfetti() {
     c.style.animationDuration = `${3 + Math.random() * 3}s`;
     document.getElementById('confetti-container').appendChild(c);
     setTimeout(() => c.remove(), 6500);
-  }, 300);
+  }, 700);
 }
 
 // Background balloons
 function createBgBalloons() {
+  if (bgBalloonInterval) return;
   const emojis = ['🎈','🎀','🌸','💫','⭐','✨','💖','🎊'];
   bgBalloonInterval = setInterval(() => {
+    if (document.hidden) return;
     const b = document.createElement('div');
     b.className = 'bg-balloon';
     b.textContent = emojis[Math.floor(Math.random() * emojis.length)];
@@ -1172,13 +1225,14 @@ function createBgBalloons() {
     b.style.opacity = `${0.3 + Math.random() * 0.4}`;
     document.getElementById('balloons-container').appendChild(b);
     setTimeout(() => b.remove(), 14000);
-  }, 1000);
+  }, 1400);
 }
 
 // Stars
-function createStars() {
+function createStars(count = 28) {
   const container = document.getElementById('stars-container');
-  for (let i = 0; i < 60; i++) {
+  if (!container) return;
+  for (let i = 0; i < count; i++) {
     const s = document.createElement('div');
     s.className = 'star';
     s.textContent = Math.random() > 0.7 ? '✦' : '·';
@@ -1216,7 +1270,9 @@ function startMusic(opts = {}) {
     if (p !== undefined) {
       p.then(() => {
         musicPlaying = true;
-        document.getElementById('music-btn').classList.add('playing');
+        const btn = document.getElementById('music-btn');
+        btn.classList.add('playing');
+        btn.setAttribute('aria-pressed', 'true');
         document.getElementById('music-icon').textContent = '🎶';
         if (onSuccess) onSuccess();
       }).catch(e => {
@@ -1225,7 +1281,9 @@ function startMusic(opts = {}) {
       });
     } else {
       musicPlaying = true;
-      document.getElementById('music-btn').classList.add('playing');
+      const btn = document.getElementById('music-btn');
+      btn.classList.add('playing');
+      btn.setAttribute('aria-pressed', 'true');
       document.getElementById('music-icon').textContent = '🎶';
       if (onSuccess) onSuccess();
     }
@@ -1238,7 +1296,9 @@ function startMusic(opts = {}) {
 function stopMusic() {
   try { const a = getAudio(); a.pause(); a.currentTime = 0; } catch(e) {}
   musicPlaying = false;
-  document.getElementById('music-btn').classList.remove('playing');
+  const btn = document.getElementById('music-btn');
+  btn.classList.remove('playing');
+  btn.setAttribute('aria-pressed', 'false');
   document.getElementById('music-icon').textContent = '🎵';
 }
 

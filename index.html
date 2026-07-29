@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Happy Birthday Sravanii! 🎂✨</title>
   <meta name="description" content="A special birthday celebration for Sravanii - turning 22 on July 29, 2026!" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,13 +13,13 @@
 <body>
 
 <!-- ===== FLOATING ELEMENTS ===== -->
-<div id="balloons-container"></div>
-<div id="confetti-container"></div>
-<div id="stars-container"></div>
+<div id="balloons-container" aria-hidden="true"></div>
+<div id="confetti-container" aria-hidden="true"></div>
+<div id="stars-container" aria-hidden="true"></div>
 
 <!-- ===== MUSIC PLAYER ===== -->
 <div id="music-player">
-  <button id="music-btn" onclick="toggleMusic()" title="Toggle Music">
+  <button id="music-btn" onclick="toggleMusic()" title="Toggle Music" aria-label="Toggle music" aria-pressed="false">
     <span id="music-icon">🎵</span>
   </button>
 </div>
@@ -316,15 +316,15 @@
 </div><!-- end slide-wrapper -->
 
 <!-- Progress Dots -->
-<div id="progress-dots">
-  <span class="dot active" onclick="goToSlide(1)"></span>
-  <span class="dot" onclick="goToSlide(2)"></span>
-  <span class="dot" onclick="goToSlide(3)"></span>
-  <span class="dot" onclick="goToSlide(4)"></span>
-  <span class="dot" onclick="goToSlide(5)"></span>
-  <span class="dot" onclick="goToSlide(6)"></span>
-  <span class="dot" onclick="goToSlide(7)"></span>
-</div>
+<nav id="progress-dots" aria-label="Slide navigation">
+  <button type="button" class="dot active" onclick="goToSlide(1)" aria-label="Slide 1" aria-current="true"></button>
+  <button type="button" class="dot" onclick="goToSlide(2)" aria-label="Slide 2"></button>
+  <button type="button" class="dot" onclick="goToSlide(3)" aria-label="Slide 3"></button>
+  <button type="button" class="dot" onclick="goToSlide(4)" aria-label="Slide 4"></button>
+  <button type="button" class="dot" onclick="goToSlide(5)" aria-label="Slide 5"></button>
+  <button type="button" class="dot" onclick="goToSlide(6)" aria-label="Slide 6"></button>
+  <button type="button" class="dot" onclick="goToSlide(7)" aria-label="Slide 7"></button>
+</nav>
 
 <script src="script.js"></script>
 </body>
