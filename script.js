@@ -56,6 +56,7 @@ let envelopeArmed = true;
 let finaleTimers = [];
 let fireworkInterval = null;
 let lastReplayAt = 0;
+let navigationLockedUntil = 0;
 
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded', () => {
@@ -110,24 +111,24 @@ function revealContinueBtn(id) {
 }
 
 function setupEnvelopeInteraction() {
-  const env = document.getElementById('envelope');
-  if (!env || env.dataset.bound === '1') return;
-  env.dataset.bound = '1';
+  // Event delegation on slide-1 so handlers survive DOM resets
+  const slide = document.getElementById('slide-1');
+  if (!slide || slide.dataset.envBound === '1') return;
+  slide.dataset.envBound = '1';
 
-  env.removeAttribute('onclick');
-
-  const onActivate = (e) => {
-    if (!envelopeArmed || env.classList.contains('opened')) return;
+  const tryOpen = (e) => {
+    const env = document.getElementById('envelope');
+    if (!env || env.classList.contains('opened') || env.classList.contains('hidden')) return;
+    if (env.style.display === 'none') return;
+    if (!envelopeArmed) return;
+    if (e.target !== env && !env.contains(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
     openEnvelope();
   };
 
-  env.addEventListener('click', onActivate);
-  env.addEventListener('touchend', onActivate, { passive: false });
-  env.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') onActivate(e);
-  });
+  slide.addEventListener('click', tryOpen);
+  slide.addEventListener('touchend', tryOpen, { passive: false });
 }
 
 function setupReplayButton() {
@@ -135,15 +136,17 @@ function setupReplayButton() {
   if (!btn) return;
 
   const onReplay = (e) => {
+    // Cancel the rest of this gesture so it cannot "click through" onto page 1
     e.preventDefault();
     e.stopPropagation();
     const now = Date.now();
-    if (now - lastReplayAt < 500) return;
+    if (now - lastReplayAt < 600) return;
     lastReplayAt = now;
-    replay();
+
+    // Defer DOM swap until after the current touch/click fully finishes
+    setTimeout(() => replay(), 0);
   };
 
-  // preventDefault on touchend stops the delayed ghost-click from landing on the envelope
   btn.addEventListener('click', onReplay);
   btn.addEventListener('touchend', onReplay, { passive: false });
 }
@@ -265,10 +268,12 @@ function showSlide(n) {
 }
 
 function nextSlide() {
+  if (Date.now() < navigationLockedUntil) return;
   if (currentSlide < totalSlides) showSlide(currentSlide + 1);
 }
 
 function goToSlide(n) {
+  if (Date.now() < navigationLockedUntil) return;
   showSlide(n);
 }
 
@@ -277,34 +282,43 @@ function clearEnvelopeTimers() {
   envelopeTimers = [];
 }
 
-function resetEnvelopeUI() {
+function resetEnvelopeUI(options = {}) {
+  const { skipToWelcome = false } = options;
   clearEnvelopeTimers();
   envelopeArmed = false;
 
-  const oldEnv = document.getElementById('envelope');
+  const env = document.getElementById('envelope');
   const welcomeReveal = document.getElementById('welcome-reveal');
 
-  // Clone to drop any stuck opened/animation state and rebind listeners cleanly
-  if (oldEnv && oldEnv.parentNode) {
-    const fresh = oldEnv.cloneNode(true);
-    fresh.id = 'envelope';
-    fresh.className = 'envelope';
-    fresh.removeAttribute('style');
-    fresh.removeAttribute('data-bound');
-    fresh.removeAttribute('onclick');
-    oldEnv.parentNode.replaceChild(fresh, oldEnv);
-    setupEnvelopeInteraction();
+  if (skipToWelcome) {
+    // After Replay: skip the envelope (mobile ghost-click leaves it unresponsive).
+    // Show welcome + Let's Begin so page 1 is immediately tappable.
+    if (env) {
+      env.className = 'envelope opened hidden';
+      env.style.display = 'none';
+    }
+    if (welcomeReveal) {
+      welcomeReveal.className = 'welcome-text';
+      welcomeReveal.removeAttribute('style');
+      welcomeReveal.style.animation = 'fadeInUp 0.6s ease';
+    }
+    envelopeArmed = true;
+    return;
   }
 
+  // First-visit / pristine envelope
+  if (env) {
+    env.className = 'envelope';
+    env.removeAttribute('style');
+  }
   if (welcomeReveal) {
     welcomeReveal.className = 'welcome-text hidden';
     welcomeReveal.removeAttribute('style');
   }
 
-  // Brief disarm so the Replay tap's leftover click cannot open the fresh envelope
   envelopeTimers.push(setTimeout(() => {
     envelopeArmed = true;
-  }, 350));
+  }, 400));
 }
 
 function replay() {
@@ -320,6 +334,9 @@ function replay() {
   if (specialMsgTimer) { clearTimeout(specialMsgTimer); specialMsgTimer = null; }
   letterTimers.forEach(t => clearTimeout(t));
   letterTimers = [];
+
+  // Block ghost-clicks from the Replay gesture advancing past welcome
+  navigationLockedUntil = Date.now() + 550;
 
   currentSlide = 1;
   candlesBlown = 0;
@@ -368,8 +385,8 @@ function replay() {
   document.getElementById('letter-body').innerHTML = '';
   document.getElementById('letter-footer').classList.add('hidden');
 
-  // Reset envelope & welcome reveal on Page 1 completely to pristine unopened state
-  resetEnvelopeUI();
+  // After Replay, show welcome + Let's Begin (envelope skip — reliable on mobile)
+  resetEnvelopeUI({ skipToWelcome: true });
 
   // Reset cake
   document.getElementById('candle-counter').textContent = 'Tap the cake to blow all candles! 🌬️';
