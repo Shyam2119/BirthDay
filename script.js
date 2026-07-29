@@ -110,7 +110,11 @@ function revealContinueBtn(id) {
   btn.classList.add('btn-enter');
   // Ensure the button is visible on mobile (often below the fold)
   requestAnimationFrame(() => {
-    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    try {
+      btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (_) {
+      btn.scrollIntoView(true);
+    }
   });
 }
 
@@ -851,18 +855,19 @@ function initCarousel() {
   carouselSeenPhotos = new Set();
   galleryContinueReady = false;
   clearCarouselSeenTimer();
-  renderCarousel();
-  startCarouselAuto();
 
   document.getElementById('gallery-continue').classList.add('hidden');
   document.getElementById('gallery-continue').classList.remove('btn-enter');
   document.getElementById('carousel-hint').textContent = 'Swipe or tap to explore ✨';
 
+  renderCarousel();
+  startCarouselAuto();
+
   // Fallback so users never get stuck without a next button
   carouselSeenTimer = setTimeout(() => {
     carouselSeenTimer = null;
     if (currentSlide === 5) showGalleryContinue();
-  }, 10000);
+  }, 5000);
 }
 
 function renderCarousel() {

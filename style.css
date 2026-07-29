@@ -625,6 +625,12 @@ body::before {
 #special-phase.phase-visible {
   animation: fadeInUp 0.55s cubic-bezier(0.22,1,0.36,1) both;
 }
+#balloon-continue {
+  margin-top: 18px;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 6;
+}
 
 
 /* =====================
@@ -719,7 +725,13 @@ body::before {
 /* =====================
    SLIDE 5: 3D CIRCULAR ROTATING CAROUSEL — PREMIUM PHOTO DISPLAY
 ===================== */
-.gallery-slide { overflow: visible !important; padding-bottom: 20px; }
+.gallery-slide { overflow: visible !important; padding-bottom: 28px; }
+.gallery-slide #gallery-continue {
+  margin-top: 16px;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 6;
+}
 
 /* Stage — elevated perspective for physical depth feel */
 .carousel-stage {
